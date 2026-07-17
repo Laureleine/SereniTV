@@ -41,7 +41,15 @@ export function initUI() {
                 },
                 (watchUrl) => {
                     console.log('[REALTIME TV] Lancement Netflix demandé via mobile! URL:', watchUrl);
-                    window.open(watchUrl, '_blank');
+                    let targetUrl = watchUrl;
+                    const titleMatch = watchUrl.match(/(?:netflix\.com\/title\/|title\/|netflix:\/\/title\/)([0-9]+)/i);
+                    if (titleMatch && titleMatch[1]) {
+                        targetUrl = `netflix://title/${titleMatch[1]}`;
+                        console.log('[REALTIME TV] Deep Link Netflix généré :', targetUrl);
+                    } else {
+                        console.log('[REALTIME TV] Pas d\'ID Netflix extrait, redirection classique.');
+                    }
+                    window.location.href = targetUrl;
                 },
                 (series) => {
                     console.log('[REALTIME TV] Preview demandée pour la série :', series ? series.titre : 'null (clear)');
@@ -475,17 +483,22 @@ export function renderSeries(seriesList) {
                 </div>
                 ${activeSerie.plateforme ? `<div class="serie-platform-badge">${activeSerie.plateforme}</div>` : ''}
                 <p class="serie-synopsis">${activeSerie.synopsis || 'Aucun résumé disponible.'}</p>
-                ${activeSerie.watch_url ? (
-                    isTvMode ? `
-                        <a href="${activeSerie.watch_url}" target="_blank" rel="noopener noreferrer" class="btn-netflix-launch">
+                ${activeSerie.watch_url ? (() => {
+                    let tvUrl = activeSerie.watch_url;
+                    const titleMatch = tvUrl.match(/(?:netflix\.com\/title\/|title\/|netflix:\/\/title\/)([0-9]+)/i);
+                    if (titleMatch && titleMatch[1]) {
+                        tvUrl = `netflix://title/${titleMatch[1]}`;
+                    }
+                    return isTvMode ? `
+                        <a href="${tvUrl}" class="btn-netflix-launch">
                             🍿 Lancer sur Netflix
                         </a>
                     ` : `
                         <button data-watch-url="${activeSerie.watch_url}" class="btn-netflix-launch">
                             📺 Lancer sur la Télévision
                         </button>
-                    `
-                ) : ''}
+                    `;
+                })() : ''}
             </div>
         `;
 
