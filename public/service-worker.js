@@ -1,4 +1,4 @@
-const CACHE_NAME = 'serenitv-cache-v1';
+const CACHE_NAME = 'serenitv-cache-v2';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -40,7 +40,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: Network falling back to Cache strategy
+// Fetch: Network-First (with cache fallback) to ensure users always get the latest build when online
 self.addEventListener('fetch', (event) => {
   // Ignore non-GET requests, Supabase database, and TMDB API calls
   if (
@@ -52,15 +52,20 @@ self.addEventListener('fetch', (event) => {
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      return fetch(event.request).then((response) => {
+    fetch(event.request)
+      .then((response) => {
+        // Clone response to put it in cache
+        if (response.status === 200) {
+          const responseClone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
         return response;
-      }).catch((err) => {
-        console.error('[Service Worker] Fetch failed:', err);
-      });
-    })
+      })
+      .catch(() => {
+        // Fallback to cache if offline
+        return caches.match(event.request);
+      })
   );
 });

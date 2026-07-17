@@ -4,7 +4,10 @@ const PAT   = 'SUPABASE_PERSONAL_ACCESS_TOKEN';
 const REF   = 'flvvjlytntnethjyyuix';
 
 const SQL = `
--- 1. Ajouter la colonne plateforme, watch_url et backdrop_path
+-- 1. Ajouter la valeur 'Terminée' à l'enum statut_visionnage_enum
+ALTER TYPE statut_visionnage_enum ADD VALUE IF NOT EXISTS 'Terminée';
+
+-- 2. Ajouter la colonne plateforme, watch_url et backdrop_path
 ALTER TABLE series ADD COLUMN IF NOT EXISTS plateforme VARCHAR(100);
 ALTER TABLE series ADD COLUMN IF NOT EXISTS watch_url VARCHAR(512);
 ALTER TABLE series ADD COLUMN IF NOT EXISTS backdrop_path VARCHAR(255);
