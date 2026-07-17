@@ -549,14 +549,9 @@ let currentPlatformFilter = null; // 'Netflix' ou null
 export function applyFilters() {
     let filtered = seriesData;
 
-    // Règle d'exclusion stricte : Exclure systématiquement les séries ignorées de tous les autres onglets
-    if (currentStatusFilter !== 'ignorees') {
-        filtered = filtered.filter(s => s.statut_visionnage !== 'Sans intérêt');
-    }
-
-    // 1. Filtrer par statut de visionnage (ou boîte de réception)
+    // 1. Filtrer par statut de visionnage (Toutes = Inbox / non classées)
     if (currentStatusFilter === 'all') {
-        filtered = filtered.filter(s => s.statut_visionnage !== 'Sans intérêt');
+        filtered = filtered.filter(s => s.statut_visionnage === null);
     } else {
         const map = {
             'en-cours':    'En cours',

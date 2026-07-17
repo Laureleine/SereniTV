@@ -461,10 +461,6 @@ export function renderSeries(seriesList) {
         card.className = isTvMode ? 'serie-card tv-card' : 'serie-card remote-active-card';
         card.dataset.serieId = activeSerie.id;
 
-        const badge = activeSerie.statut_production === 'Terminée'
-            ? '<span class="badge badge--terminee">Terminée</span>'
-            : '<span class="badge badge--en-cours">En cours</span>';
-
         const posterUrl = activeSerie.affiche_path
             ? `https://image.tmdb.org/t/p/w500${activeSerie.affiche_path}`
             : null;
@@ -479,7 +475,6 @@ export function renderSeries(seriesList) {
             <div class="card-content">
                 <div class="card-header">
                     <h2 class="serie-title">${activeSerie.titre}</h2>
-                    ${badge}
                 </div>
                 ${activeSerie.plateforme ? `<div class="serie-platform-badge">${activeSerie.plateforme}</div>` : ''}
                 <p class="serie-synopsis">${activeSerie.synopsis || 'Aucun résumé disponible.'}</p>
@@ -518,10 +513,6 @@ export function renderSeries(seriesList) {
         card.className = 'serie-card';
         card.dataset.serieId = serie.id;
 
-        const badge = serie.statut_production === 'Terminée'
-            ? '<span class="badge badge--terminee">Terminée</span>'
-            : '<span class="badge badge--en-cours">En cours</span>';
-
         const posterUrl = serie.affiche_path
             ? `https://image.tmdb.org/t/p/w500${serie.affiche_path}`
             : null;
@@ -536,7 +527,6 @@ export function renderSeries(seriesList) {
             <div class="card-content">
                 <div class="card-header">
                     <h2 class="serie-title">${serie.titre}</h2>
-                    ${badge}
                 </div>
                 ${serie.plateforme ? `<div class="serie-platform-badge">${serie.plateforme}</div>` : ''}
                 <p class="serie-synopsis">${serie.synopsis || 'Aucun résumé disponible.'}</p>
