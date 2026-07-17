@@ -4,13 +4,27 @@ const PAT   = 'SUPABASE_PERSONAL_ACCESS_TOKEN';
 const REF   = 'flvvjlytntnethjyyuix';
 
 const SQL = `
--- 1. Ajouter la valeur 'Terminée' à l'enum statut_visionnage_enum
-ALTER TYPE statut_visionnage_enum ADD VALUE IF NOT EXISTS 'Terminée';
+-- 1. Supprimer de ...0001 les doublons qui existent déjà dans ...0000 pour éviter la violation de clé unique
+DELETE FROM utilisateur_series
+WHERE user_id = '00000000-0000-0000-0000-000000000001'
+  AND serie_id IN (
+      SELECT serie_id FROM utilisateur_series WHERE user_id = '00000000-0000-0000-0000-000000000000'
+  );
 
--- 2. Ajouter la colonne plateforme, watch_url et backdrop_path
-ALTER TABLE series ADD COLUMN IF NOT EXISTS plateforme VARCHAR(100);
-ALTER TABLE series ADD COLUMN IF NOT EXISTS watch_url VARCHAR(512);
-ALTER TABLE series ADD COLUMN IF NOT EXISTS backdrop_path VARCHAR(255);
+DELETE FROM utilisateur_saisons
+WHERE user_id = '00000000-0000-0000-0000-000000000001'
+  AND saison_id IN (
+      SELECT saison_id FROM utilisateur_saisons WHERE user_id = '00000000-0000-0000-0000-000000000000'
+  );
+
+-- 2. Maintenant on peut faire l'UPDATE de ...0000 vers ...0001 en toute sécurité
+UPDATE utilisateur_series 
+SET user_id = '00000000-0000-0000-0000-000000000001' 
+WHERE user_id = '00000000-0000-0000-0000-000000000000';
+
+UPDATE utilisateur_saisons 
+SET user_id = '00000000-0000-0000-0000-000000000001' 
+WHERE user_id = '00000000-0000-0000-0000-000000000000';
 
 -- 2. Configurer la publication Realtime
 DO $$

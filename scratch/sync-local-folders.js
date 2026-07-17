@@ -18,7 +18,7 @@ envContent.split('\n').forEach(line => {
 const SUPABASE_URL = env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
 const TMDB_ACCESS_TOKEN = env.VITE_TMDB_ACCESS_TOKEN;
-const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000'; // Notre ID utilisateur mocké
+const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001'; // Notre ID utilisateur mocké
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !TMDB_ACCESS_TOKEN) {
     console.error('❌ Variables d\'environnement manquantes dans le fichier .env !');
