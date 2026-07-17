@@ -138,10 +138,11 @@ export function initUI() {
     container.addEventListener('click', (e) => {
         const btnLaunch = e.target.closest('.btn-netflix-launch');
         if (btnLaunch && currentMode === 'remote') {
-            const href = btnLaunch.getAttribute('href');
-            if (href) {
-                console.log('[TELECOMMANDE] Diffusion du signal de lancement Netflix :', href);
-                diffuserSignalLancement(href);
+            e.preventDefault();
+            const watchUrl = btnLaunch.dataset.watchUrl;
+            if (watchUrl) {
+                console.log('[TELECOMMANDE] Diffusion du signal de lancement Netflix (exclusif) :', watchUrl);
+                diffuserSignalLancement(watchUrl);
             }
         }
     });
@@ -437,11 +438,17 @@ export function renderSeries(seriesList) {
                 </div>
                 ${activeSerie.plateforme ? `<div class="serie-platform-badge">${activeSerie.plateforme}</div>` : ''}
                 <p class="serie-synopsis">${activeSerie.synopsis || 'Aucun résumé disponible.'}</p>
-                ${activeSerie.watch_url ? `
-                    <a href="${activeSerie.watch_url}" target="_blank" rel="noopener noreferrer" class="btn-netflix-launch">
-                        🍿 Lancer sur Netflix
-                    </a>
-                ` : ''}
+                ${activeSerie.watch_url ? (
+                    isTvMode ? `
+                        <a href="${activeSerie.watch_url}" target="_blank" rel="noopener noreferrer" class="btn-netflix-launch">
+                            🍿 Lancer sur Netflix
+                        </a>
+                    ` : `
+                        <button data-watch-url="${activeSerie.watch_url}" class="btn-netflix-launch">
+                            📺 Lancer sur la Télévision
+                        </button>
+                    `
+                ) : ''}
             </div>
         `;
 
