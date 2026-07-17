@@ -556,7 +556,7 @@ export function applyFilters() {
 
     // 1. Filtrer par statut de visionnage (ou boîte de réception)
     if (currentStatusFilter === 'all') {
-        filtered = filtered.filter(s => s.statut_visionnage === null);
+        filtered = filtered.filter(s => s.statut_visionnage !== 'Sans intérêt');
     } else {
         const map = {
             'en-cours':    'En cours',
