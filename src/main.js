@@ -1,17 +1,14 @@
 import { initUI } from './modules/ui.js';
 import { fetchSeries } from './modules/series.js';
 
-// Init PWA service worker (géré par vite-plugin-pwa)
-import { registerSW } from 'virtual:pwa-register';
-
-const updateSW = registerSW({
-  onNeedRefresh() {
-    console.log("Nouvelle version disponible !");
-  },
-  onOfflineReady() {
-    console.log("Application prête à fonctionner hors ligne.");
-  },
-});
+// Enregistrement du Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('[PWA] Service Worker enregistré avec succès !', reg.scope))
+            .catch(err => console.error('[PWA] Échec d\'enregistrement du Service Worker :', err));
+    });
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Initialiser l'interface utilisateur
