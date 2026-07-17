@@ -11,6 +11,7 @@ import {
     updateStatutUneSaison,
     setPlatformFilter,
     initRealtimeZapping,
+    diffuserSignalLancement,
     MOCK_USER_ID,
 } from './series.js';
 
@@ -31,9 +32,15 @@ export function initUI() {
             currentMode = 'tv';
             document.body.classList.add('is-tv-mode');
             overlay.classList.add('hidden');
-            initRealtimeZapping((payload) => {
-                console.log('[REALTIME TV] Événement reçu, mise à jour du catalogue en cours.');
-            });
+            initRealtimeZapping(
+                (payload) => {
+                    console.log('[REALTIME TV] Événement reçu, mise à jour du catalogue en cours.');
+                },
+                (watchUrl) => {
+                    console.log('[REALTIME TV] Lancement Netflix demandé via mobile! URL:', watchUrl);
+                    window.open(watchUrl, '_blank');
+                }
+            );
             fetchSeries();
         });
 
@@ -126,6 +133,18 @@ export function initUI() {
             await handleEnCours(id, title, null);
         });
     }
+
+    // Intercepter le clic sur le bouton Lancer sur Netflix pour diffuser le signal à la TV
+    container.addEventListener('click', (e) => {
+        const btnLaunch = e.target.closest('.btn-netflix-launch');
+        if (btnLaunch && currentMode === 'remote') {
+            const href = btnLaunch.getAttribute('href');
+            if (href) {
+                console.log('[TELECOMMANDE] Diffusion du signal de lancement Netflix :', href);
+                diffuserSignalLancement(href);
+            }
+        }
+    });
 
     // Écoute fermeture du modal
     document.getElementById('modal-overlay').addEventListener('click', fermerModal);
@@ -359,6 +378,20 @@ export function renderSeries(seriesList) {
 
     const isTvMode = currentMode === 'tv';
     const isRemoteMode = currentMode === 'remote';
+
+    // Gestion du fond d'écran Cinéma pour le Mode TV
+    const tvBackdrop = document.getElementById('tv-backdrop');
+    if (tvBackdrop) {
+        const activeSerie = (isTvMode || isRemoteMode) ? seriesList[0] : null;
+        if (isTvMode && activeSerie && activeSerie.backdrop_path) {
+            const backdropUrl = `https://image.tmdb.org/t/p/w1280${activeSerie.backdrop_path}`;
+            tvBackdrop.style.backgroundImage = `linear-gradient(to top, #111 15%, rgba(17, 17, 17, 0.85) 100%), url(${backdropUrl})`;
+            tvBackdrop.classList.add('is-active');
+        } else {
+            tvBackdrop.style.backgroundImage = '';
+            tvBackdrop.classList.remove('is-active');
+        }
+    }
 
     if (isTvMode || isRemoteMode) {
         const activeSerie = seriesList[0];

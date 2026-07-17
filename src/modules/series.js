@@ -93,6 +93,7 @@ async function fetchTMDB(tmdbId) {
         // Fallback sur la version originale si pas de traduction FR
         synopsis:          d.overview || d.original_name,
         affiche_path:      d.poster_path,
+        backdrop_path:     d.backdrop_path,
         statut_production: mapperStatutTMDB(d.status),
         plateforme:        d.networks?.[0]?.name || null,
         watch_url:         watchUrl,
@@ -160,6 +161,7 @@ export async function synchroniserSerieAvecTMDB(tmdbId) {
                 titre:             tmdb.titre,
                 synopsis:          tmdb.synopsis,
                 affiche_path:      tmdb.affiche_path,
+                backdrop_path:     tmdb.backdrop_path,
                 statut_production: tmdb.statut_production,
                 plateforme:        tmdb.plateforme,
                 watch_url:         tmdb.watch_url,
@@ -535,15 +537,17 @@ export function setPlatformFilter(platform) {
     applyFilters();
 }
 
+export let zappingChannel = null;
+
 /**
- * Initialise l'écoute en temps réel (Supabase Realtime) des changements de statut.
- * Utilisé principalement par le mode TV pour réagir au zapping de la télécommande.
+ * Initialise l'écoute en temps réel (Supabase Realtime) des changements de statut et du zapping.
  * @param {Function} callback - Appelé à chaque modification détectée
+ * @param {Function} onLaunchNetflix - Appelé lors de la réception du signal de lancement direct
  * @returns {object} Supabase Realtime channel
  */
-export function initRealtimeZapping(callback) {
-    const channel = supabase
-        .channel('schema-db-changes')
+export function initRealtimeZapping(callback, onLaunchNetflix) {
+    zappingChannel = supabase
+        .channel('serenitv-zapping')
         .on(
             'postgres_changes',
             {
@@ -559,9 +563,43 @@ export function initRealtimeZapping(callback) {
                 if (callback) callback(payload);
             }
         )
+        .on(
+            'broadcast',
+            { event: 'launch-netflix' },
+            (payload) => {
+                console.log('[REALTIME] Signal de lancement reçu:', payload);
+                if (onLaunchNetflix) onLaunchNetflix(payload.payload.watch_url);
+            }
+        )
         .subscribe((status) => {
             console.log('[REALTIME] Statut de la souscription Realtime:', status);
         });
 
-    return channel;
+    return zappingChannel;
+}
+
+/**
+ * Diffuse un message en temps réel via les canaux de diffusion Supabase (Broadcast)
+ * pour ordonner à la télé d'ouvrir directement la série Netflix correspondante.
+ * @param {string} watchUrl - Le lien de visionnage
+ */
+export function diffuserSignalLancement(watchUrl) {
+    if (!zappingChannel) {
+        zappingChannel = supabase.channel('serenitv-zapping').subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                sendBroadcastSignal(watchUrl);
+            }
+        });
+    } else {
+        sendBroadcastSignal(watchUrl);
+    }
+}
+
+function sendBroadcastSignal(watchUrl) {
+    zappingChannel.send({
+        type: 'broadcast',
+        event: 'launch-netflix',
+        payload: { watch_url: watchUrl },
+    });
+    console.log('[REALTIME] Signal de lancement diffusé:', watchUrl);
 }

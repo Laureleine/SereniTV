@@ -1189,4 +1189,31 @@ nav {
     align-self: flex-start;
 }
 
+/* ── Arrière-plan Cinéma pour le Mode TV ── */
+.tv-backdrop-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    z-index: 0; /* Placé derrière l'application, mais devant le fond noir par défaut */
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.8s ease-in-out, background-image 0.5s ease-in-out;
+}
+
+.tv-backdrop-bg.is-active {
+    opacity: 0.38; /* Parfait équilibre entre immersion et lisibilité de la carte TV */
+}
+
+/* On s'assure que le contenu du Mode TV reste devant le backdrop */
+.is-tv-mode #app {
+    position: relative;
+    z-index: 2;
+}
+
+
 
