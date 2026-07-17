@@ -294,7 +294,7 @@ export async function getHybridSerieData(tmdbId) {
  * @returns {Promise<Array>} Tableau de saisons enrichi du statut utilisateur
  */
 export async function getSaisonsAvecStatut(serieId, userId = MOCK_USER_ID) {
-    const { data: saisons, error } = await supabase
+    let { data: saisons, error } = await supabase
         .from('saisons')
         .select(`
             *,
@@ -305,6 +305,38 @@ export async function getSaisonsAvecStatut(serieId, userId = MOCK_USER_ID) {
         .order('numero_saison');
 
     if (error) throw error;
+
+    // JIT Sync: Si aucune saison n'est présente localement, on synchronise depuis TMDB
+    if (!saisons || saisons.length === 0) {
+        const { data: serie } = await supabase
+            .from('series')
+            .select('tmdb_id')
+            .eq('id', serieId)
+            .single();
+
+        if (serie && serie.tmdb_id) {
+            console.log(`[JIT SYNC] Chargement des saisons à la volée pour tmdb_id=${serie.tmdb_id}...`);
+            try {
+                await synchroniserSerieAvecTMDB(serie.tmdb_id);
+                // On récupère à nouveau les saisons après la synchronisation
+                const res = await supabase
+                    .from('saisons')
+                    .select(`
+                        *,
+                        utilisateur_saisons!left (statut_saison, dernier_episode_vu)
+                    `)
+                    .eq('serie_id', serieId)
+                    .eq('utilisateur_saisons.user_id', userId)
+                    .order('numero_saison');
+                
+                if (res.error) throw res.error;
+                saisons = res.data;
+            } catch (err) {
+                console.error('[JIT SYNC] Échec de la synchronisation à la volée:', err);
+            }
+        }
+    }
+
     return saisons || [];
 }
 
