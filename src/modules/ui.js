@@ -12,6 +12,7 @@ import {
     setPlatformFilter,
     initRealtimeZapping,
     diffuserSignalLancement,
+    diffuserSignalPreview,
     MOCK_USER_ID,
 } from './series.js';
 
@@ -21,6 +22,7 @@ import {
 
 export let currentMode = 'pc';
 let _dernierRenduSeries = [];
+let tvPreviewOverride = null;
 
 export function initUI() {
     const overlay = document.getElementById('mode-selection-overlay');
@@ -40,6 +42,11 @@ export function initUI() {
                 (watchUrl) => {
                     console.log('[REALTIME TV] Lancement Netflix demandé via mobile! URL:', watchUrl);
                     window.open(watchUrl, '_blank');
+                },
+                (series) => {
+                    console.log('[REALTIME TV] Preview demandée pour la série :', series ? series.titre : 'null (clear)');
+                    tvPreviewOverride = series;
+                    renderSeries(_dernierRenduSeries);
                 }
             );
             fetchSeries();
@@ -111,7 +118,10 @@ export function initUI() {
     const btnYes = document.getElementById('remote-yes');
 
     if (btnNo && btnMaybe && btnYes) {
-        const optimisteTriage = (id, statut) => {
+        const optimisteTriage = (id, statut, triggerPreview = false) => {
+            // Retrouver la série active avant de la retirer
+            const activeSerie = _dernierRenduSeries.find(s => s.id === id);
+
             // 1. Mise à jour visuelle instantanée
             const index = _dernierRenduSeries.findIndex(s => s.id === id);
             if (index !== -1) {
@@ -119,7 +129,14 @@ export function initUI() {
                 renderSeries(_dernierRenduSeries);
             }
             
-            // 2. Enregistrement asynchrone en arrière-plan sans bloquer
+            // 2. Diffuser preview ou clear preview
+            if (triggerPreview && activeSerie) {
+                diffuserSignalPreview(activeSerie);
+            } else {
+                diffuserSignalPreview(null);
+            }
+
+            // 3. Enregistrement asynchrone en arrière-plan sans bloquer
             updateStatutGlobal(id, statut, MOCK_USER_ID).then((result) => {
                 if (!result.success) {
                     console.error(`[OPTIMISTE] Échec de l'enregistrement de la série ${id} (${statut})`);
@@ -131,21 +148,24 @@ export function initUI() {
             const firstCard = document.querySelector('.serie-card');
             if (!firstCard) return;
             const id = parseInt(firstCard.dataset.serieId);
-            optimisteTriage(id, 'Abandonnée');
+            // NON = Sans intérêt (Ignorées)
+            optimisteTriage(id, 'Sans intérêt', false);
         });
 
         btnMaybe.addEventListener('click', () => {
             const firstCard = document.querySelector('.serie-card');
             if (!firstCard) return;
             const id = parseInt(firstCard.dataset.serieId);
-            optimisteTriage(id, 'Peut-être');
+            // PEUT-ÊTRE = Peut-être
+            optimisteTriage(id, 'Peut-être', false);
         });
 
         btnYes.addEventListener('click', () => {
             const firstCard = document.querySelector('.serie-card');
             if (!firstCard) return;
             const id = parseInt(firstCard.dataset.serieId);
-            optimisteTriage(id, 'En cours');
+            // OUI = En cours (avec prévisualisation cinéma sur la télé)
+            optimisteTriage(id, 'En cours', true);
         });
     }
 
@@ -400,7 +420,7 @@ export function renderSeries(seriesList) {
     // Gestion du fond d'écran Cinéma pour le Mode TV
     const tvBackdrop = document.getElementById('tv-backdrop');
     if (tvBackdrop) {
-        const activeSerie = (isTvMode || isRemoteMode) ? seriesList[0] : null;
+        const activeSerie = (isTvMode && tvPreviewOverride) || ((isTvMode || isRemoteMode) ? seriesList[0] : null);
         if (isTvMode && activeSerie && activeSerie.backdrop_path) {
             const backdropUrl = `https://image.tmdb.org/t/p/w1280${activeSerie.backdrop_path}`;
             tvBackdrop.style.backgroundImage = `linear-gradient(to top, #111 15%, rgba(17, 17, 17, 0.85) 100%), url(${backdropUrl})`;
@@ -412,7 +432,7 @@ export function renderSeries(seriesList) {
     }
 
     if (isTvMode || isRemoteMode) {
-        const activeSerie = seriesList[0];
+        const activeSerie = (isTvMode && tvPreviewOverride) || seriesList[0];
         if (!activeSerie) {
             container.innerHTML = isTvMode ? `
                 <div class="tv-empty-state">

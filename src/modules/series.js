@@ -540,6 +540,8 @@ export function applyFilters() {
             'a-voir':      'A voir',
             'terminees':   'Terminée',
             'abandonnees': 'Abandonnée',
+            'peut-etre':   'Peut-être',
+            'ignorees':    'Sans intérêt',
         };
         const cible = map[currentStatusFilter];
         if (cible) {
@@ -572,12 +574,13 @@ export function setPlatformFilter(platform) {
 export let zappingChannel = null;
 
 /**
- * Initialise l'écoute en temps réel (Supabase Realtime) des changements de statut et du zapping.
+ * Initialise l'écoute en temps réel (Supabase Realtime) des changements de statut, zapping et preview.
  * @param {Function} callback - Appelé à chaque modification détectée
  * @param {Function} onLaunchNetflix - Appelé lors de la réception du signal de lancement direct
+ * @param {Function} onPreviewSeries - Appelé lors de la réception d'un signal de prévisualisation
  * @returns {object} Supabase Realtime channel
  */
-export function initRealtimeZapping(callback, onLaunchNetflix) {
+export function initRealtimeZapping(callback, onLaunchNetflix, onPreviewSeries) {
     zappingChannel = supabase
         .channel('serenitv-zapping')
         .on(
@@ -601,6 +604,14 @@ export function initRealtimeZapping(callback, onLaunchNetflix) {
             (payload) => {
                 console.log('[REALTIME] Signal de lancement reçu:', payload);
                 if (onLaunchNetflix) onLaunchNetflix(payload.payload.watch_url);
+            }
+        )
+        .on(
+            'broadcast',
+            { event: 'preview-series' },
+            (payload) => {
+                console.log('[REALTIME] Signal de prévisualisation reçu:', payload);
+                if (onPreviewSeries) onPreviewSeries(payload.payload.series);
             }
         )
         .subscribe((status) => {
@@ -634,4 +645,29 @@ function sendBroadcastSignal(watchUrl) {
         payload: { watch_url: watchUrl },
     });
     console.log('[REALTIME] Signal de lancement diffusé:', watchUrl);
+}
+
+/**
+ * Diffuse un message en temps réel pour ordonner à la télé d'afficher immédiatement la preview.
+ * @param {object} series - Objet série complet
+ */
+export function diffuserSignalPreview(series) {
+    if (!zappingChannel) {
+        zappingChannel = supabase.channel('serenitv-zapping').subscribe((status) => {
+            if (status === 'SUBSCRIBED') {
+                sendPreviewSignal(series);
+            }
+        });
+    } else {
+        sendPreviewSignal(series);
+    }
+}
+
+function sendPreviewSignal(series) {
+    zappingChannel.send({
+        type: 'broadcast',
+        event: 'preview-series',
+        payload: { series: series },
+    });
+    console.log('[REALTIME] Signal de prévisualisation diffusé:', series.titre);
 }
