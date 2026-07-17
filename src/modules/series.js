@@ -73,7 +73,7 @@ export async function fetchSeries() {
  * @returns {Promise<{titre, synopsis, statut_production, saisons: Array}>}
  */
 async function fetchTMDB(tmdbId) {
-    const url = `${TMDB_BASE_URL}/tv/${tmdbId}?language=fr-FR`;
+    const url = `${TMDB_BASE_URL}/tv/${tmdbId}?language=fr-FR&append_to_response=watch/providers`;
     const response = await fetch(url, { headers: TMDB_HEADERS });
 
     if (!response.ok) {
@@ -82,6 +82,12 @@ async function fetchTMDB(tmdbId) {
 
     const d = await response.json();
 
+    const providers = d["watch/providers"]?.results?.FR;
+    const hasNetflix = providers && (providers.flatrate || []).some(
+        p => p.provider_name && p.provider_name.toLowerCase().includes('netflix')
+    );
+    const watchUrl = hasNetflix ? (providers.link || null) : null;
+
     return {
         titre:             d.name,
         // Fallback sur la version originale si pas de traduction FR
@@ -89,6 +95,7 @@ async function fetchTMDB(tmdbId) {
         affiche_path:      d.poster_path,
         statut_production: mapperStatutTMDB(d.status),
         plateforme:        d.networks?.[0]?.name || null,
+        watch_url:         watchUrl,
         // On filtre la saison 0 (Spéciaux / Making-of) qui n'a pas de valeur métier
         saisons: (d.seasons || [])
             .filter(s => s.season_number > 0)
@@ -155,6 +162,7 @@ export async function synchroniserSerieAvecTMDB(tmdbId) {
                 affiche_path:      tmdb.affiche_path,
                 statut_production: tmdb.statut_production,
                 plateforme:        tmdb.plateforme,
+                watch_url:         tmdb.watch_url,
                 derniere_maj_tmdb: now,
             },
             { onConflict: 'tmdb_id' }

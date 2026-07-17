@@ -4,8 +4,9 @@ const PAT   = 'SUPABASE_PERSONAL_ACCESS_TOKEN';
 const REF   = 'flvvjlytntnethjyyuix';
 
 const SQL = `
--- 1. Ajouter la colonne plateforme
+-- 1. Ajouter la colonne plateforme et watch_url
 ALTER TABLE series ADD COLUMN IF NOT EXISTS plateforme VARCHAR(100);
+ALTER TABLE series ADD COLUMN IF NOT EXISTS watch_url VARCHAR(512);
 
 -- 2. Configurer la publication Realtime
 DO $$

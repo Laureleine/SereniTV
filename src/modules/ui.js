@@ -404,6 +404,11 @@ export function renderSeries(seriesList) {
                 </div>
                 ${activeSerie.plateforme ? `<div class="serie-platform-badge">${activeSerie.plateforme}</div>` : ''}
                 <p class="serie-synopsis">${activeSerie.synopsis || 'Aucun résumé disponible.'}</p>
+                ${activeSerie.watch_url ? `
+                    <a href="${activeSerie.watch_url}" target="_blank" rel="noopener noreferrer" class="btn-netflix-launch">
+                        🍿 Lancer sur Netflix
+                    </a>
+                ` : ''}
             </div>
         `;
 

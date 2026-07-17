@@ -1147,3 +1147,46 @@ nav {
     cursor: default;
 }
 
+/* ── Bouton Lancer sur Netflix ── */
+.btn-netflix-launch {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #e50914 0%, #b80710 100%);
+    color: #ffffff;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 8px 24px rgba(229, 9, 20, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    margin-top: 12px;
+    text-align: center;
+}
+
+.btn-netflix-launch:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(229, 9, 20, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.2);
+    filter: brightness(1.1);
+}
+
+.btn-netflix-launch:active {
+    transform: translateY(1px);
+}
+
+/* Énorme bouton pour le mode TV */
+.is-tv-mode .btn-netflix-launch {
+    font-size: 1.35rem;
+    padding: 20px 48px;
+    border-radius: 16px;
+    box-shadow: 0 15px 35px rgba(229, 9, 20, 0.5), 0 0 30px rgba(229, 9, 20, 0.2);
+    margin-top: 24px;
+    align-self: flex-start;
+}
+
+
