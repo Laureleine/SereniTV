@@ -20,6 +20,7 @@ import {
 // ─────────────────────────────────────────────
 
 export let currentMode = 'pc';
+let _dernierRenduSeries = [];
 
 export function initUI() {
     const overlay = document.getElementById('mode-selection-overlay');
@@ -104,33 +105,47 @@ export function initUI() {
         }
     });
 
-    // Boutons de la télécommande / Zapping mobile
+    // Boutons de la télécommande / Zapping mobile (Triage optimiste 0ms)
     const btnNo = document.getElementById('remote-no');
     const btnMaybe = document.getElementById('remote-maybe');
     const btnYes = document.getElementById('remote-yes');
 
     if (btnNo && btnMaybe && btnYes) {
-        btnNo.addEventListener('click', async () => {
+        const optimisteTriage = (id, statut) => {
+            // 1. Mise à jour visuelle instantanée
+            const index = _dernierRenduSeries.findIndex(s => s.id === id);
+            if (index !== -1) {
+                _dernierRenduSeries.splice(index, 1);
+                renderSeries(_dernierRenduSeries);
+            }
+            
+            // 2. Enregistrement asynchrone en arrière-plan sans bloquer
+            updateStatutGlobal(id, statut, MOCK_USER_ID).then((result) => {
+                if (!result.success) {
+                    console.error(`[OPTIMISTE] Échec de l'enregistrement de la série ${id} (${statut})`);
+                }
+            });
+        };
+
+        btnNo.addEventListener('click', () => {
             const firstCard = document.querySelector('.serie-card');
             if (!firstCard) return;
             const id = parseInt(firstCard.dataset.serieId);
-            const title = firstCard.querySelector('.serie-title').textContent;
-            await handleAbandonnee(id, title, null);
+            optimisteTriage(id, 'Abandonnée');
         });
 
-        btnMaybe.addEventListener('click', async () => {
+        btnMaybe.addEventListener('click', () => {
             const firstCard = document.querySelector('.serie-card');
             if (!firstCard) return;
             const id = parseInt(firstCard.dataset.serieId);
-            await handleStatutSimple(id, 'Peut-être', null);
+            optimisteTriage(id, 'Peut-être');
         });
 
-        btnYes.addEventListener('click', async () => {
+        btnYes.addEventListener('click', () => {
             const firstCard = document.querySelector('.serie-card');
             if (!firstCard) return;
             const id = parseInt(firstCard.dataset.serieId);
-            const title = firstCard.querySelector('.serie-title').textContent;
-            await handleEnCours(id, title, null);
+            optimisteTriage(id, 'En cours');
         });
     }
 
@@ -374,6 +389,8 @@ function setSearchStatus(el, type, message) {
 const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Terminée', 'Abandonnée', 'Sans intérêt', 'Peut-être'];
 
 export function renderSeries(seriesList) {
+    _dernierRenduSeries = [...seriesList];
+
     const container = document.getElementById('series-container');
     container.innerHTML = '';
 
