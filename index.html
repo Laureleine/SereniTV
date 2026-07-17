@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SéréniTV - Gestionnaire de Séries</title>
+    <meta name="description" content="Suivi complet de vos séries et saisons par thème">
+    
+    <!-- PWA -->
+    <link rel="icon" type="image/png" href="/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/icon-192x192.png" />
+    
+    <link rel="stylesheet" href="/src/styles/main.css">
+</head>
+<body>
+    <div id="app">
+        <header>
+            <h1>SéréniTV</h1>
+            <nav>
+                <button class="nav-btn active" data-filter="all">Toutes</button>
+                <button class="nav-btn" data-filter="en-cours">En cours</button>
+                <button class="nav-btn" data-filter="a-voir">À voir</button>
+                <button class="nav-btn" data-filter="terminees">Terminées</button>
+                <button class="nav-btn nav-btn--danger" data-filter="abandonnees">Abandonnées</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- ── Filtres de Plateforme ── -->
+            <div class="platform-filters" id="platform-filters">
+                <button class="platform-btn active" data-platform="all">Tous</button>
+                <button class="platform-btn platform-btn--netflix" data-platform="Netflix">
+                    <span class="platform-badge-logo">N</span> Netflix
+                </button>
+            </div>
+
+            <!-- ── Barre de recherche de séries ── -->
+            <div class="search-bar" id="search-bar" role="search">
+                <div class="search-bar__input-wrap">
+                    <svg class="search-bar__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input
+                        type="text"
+                        id="serie-search"
+                        class="search-bar__input"
+                        placeholder="Rechercher une série à ajouter…"
+                        autocomplete="off"
+                        spellcheck="false"
+                        aria-label="Rechercher une série"
+                        aria-autocomplete="list"
+                        aria-controls="search-suggestions"
+                        aria-expanded="false"
+                    >
+                    <button id="search-clear" class="search-bar__clear" aria-label="Effacer la recherche" hidden>✕</button>
+                    <span id="search-status" class="search-bar__status" aria-live="polite"></span>
+                </div>
+
+                <!-- Suggestions dropdown -->
+                <ul
+                    id="search-suggestions"
+                    class="search-suggestions"
+                    role="listbox"
+                    aria-label="Suggestions de séries"
+                    hidden
+                ></ul>
+            </div>
+
+            <div id="series-container">
+                <!-- Les séries seront injectées ici par JS -->
+                <div class="loading">Chargement des séries...</div>
+            </div>
+
+            <!-- ── Télécommande / Zapping Deck (Mobile uniquement) ── -->
+            <div class="remote-deck" id="remote-deck" hidden>
+                <button class="remote-btn remote-btn--no" id="remote-no">
+                    <span class="remote-btn__icon">🪦</span>
+                    <span class="remote-btn__label">NON</span>
+                </button>
+                <button class="remote-btn remote-btn--maybe" id="remote-maybe">
+                    <span class="remote-btn__icon">🤷‍♂️</span>
+                    <span class="remote-btn__label">PEUT-ÊTRE</span>
+                </button>
+                <button class="remote-btn remote-btn--yes" id="remote-yes">
+                    <span class="remote-btn__icon">🔥</span>
+                    <span class="remote-btn__label">OUI !</span>
+                </button>
+            </div>
+        </main>
+
+    </div>
+
+    <!-- ── Modal générique (Abandon / Démarrage) ── -->
+    <div id="modal-overlay" class="modal-overlay" role="presentation"></div>
+    <div id="modal-abandon" class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-titre">
+        <div class="modal-content">
+            <h2 id="modal-titre" class="modal-titre"><!-- Titre dynamique --></h2>
+            <p class="modal-description">
+                <span id="modal-description-label"><!-- Label dynamique --></span><br>
+                <strong id="modal-serie-titre"></strong>&nbsp;?
+            </p>
+            <select id="modal-saison-select" class="modal-select" aria-label="Choisir une saison">
+                <!-- Rempli dynamiquement -->
+            </select>
+            <div class="modal-actions">
+                <button id="modal-annuler" class="btn btn--ghost">Annuler</button>
+                <button id="modal-confirmer" class="btn btn--danger">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
