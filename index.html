@@ -13,6 +13,31 @@
     <link rel="stylesheet" href="/src/styles/main.css">
 </head>
 <body>
+    <!-- ── Écran de Sélection de Mode (Overlay de démarrage) ── -->
+    <div id="mode-selection-overlay" class="mode-selection-overlay">
+        <div class="mode-selection-content">
+            <h2 class="mode-selection-title">SéréniTV</h2>
+            <p class="mode-selection-subtitle">Choisissez votre mode d'utilisation :</p>
+            <div class="mode-buttons-grid">
+                <button id="btn-select-tv" class="mode-btn-large">
+                    <span class="mode-btn-icon">📺</span>
+                    <span class="mode-btn-title">Passer en Mode TV</span>
+                    <span class="mode-btn-desc">Affichage épuré pour grand écran</span>
+                </button>
+                <button id="btn-select-remote" class="mode-btn-large">
+                    <span class="mode-btn-icon">📱</span>
+                    <span class="mode-btn-title">Activer la Télécommande</span>
+                    <span class="mode-btn-desc">Triage rapide par boutons depuis mobile</span>
+                </button>
+                <button id="btn-select-pc" class="mode-btn-large">
+                    <span class="mode-btn-icon">💻</span>
+                    <span class="mode-btn-title">Accéder au Mode PC</span>
+                    <span class="mode-btn-desc">Expérience classique complète</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div id="app">
         <header>
             <h1>SéréniTV</h1>

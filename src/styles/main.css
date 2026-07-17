@@ -1018,3 +1018,132 @@ nav {
     }
 }
 
+/* ── Écran de Sélection de Mode (Overlay) ── */
+.mode-selection-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(9, 11, 22, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.mode-selection-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.mode-selection-content {
+    max-width: 900px;
+    width: 100%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    animation: scaleInMode 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes scaleInMode {
+    from { transform: scale(0.95); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+}
+
+.mode-selection-title {
+    font-size: clamp(2.5rem, 8vw, 4rem);
+    font-weight: 900;
+    letter-spacing: -2px;
+    background: var(--grad-serenite);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 4px 12px rgba(168, 85, 247, 0.25));
+    margin-bottom: 8px;
+}
+
+.mode-selection-subtitle {
+    font-size: 1.15rem;
+    color: var(--text-muted);
+    margin-bottom: 32px;
+}
+
+.mode-buttons-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+.mode-btn-large {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px 24px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.mode-btn-large:hover {
+    transform: translateY(-8px);
+    border-color: var(--electric-purp);
+    box-shadow: 0 15px 30px rgba(168, 85, 247, 0.15), 0 0 0 1px rgba(168, 85, 247, 0.1);
+    background: rgba(168, 85, 247, 0.03);
+}
+
+.mode-btn-icon {
+    font-size: 3.5rem;
+    transition: transform 0.3s;
+}
+
+.mode-btn-large:hover .mode-btn-icon {
+    transform: scale(1.15);
+}
+
+.mode-btn-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+.mode-btn-desc {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+/* ── Mode Télécommande (Remote View) ── */
+.is-remote-mode header,
+.is-remote-mode .search-bar,
+.is-remote-mode .platform-filters {
+    display: none !important;
+}
+
+.is-remote-mode #series-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    padding-bottom: 120px; /* Espace pour la télécommande collée en bas */
+}
+
+.is-remote-mode .remote-active-card {
+    max-width: 450px;
+    width: 100%;
+    margin: 0 auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(168, 85, 247, 0.15);
+    border-color: rgba(168, 85, 247, 0.25);
+    cursor: default;
+}
+

@@ -18,8 +18,38 @@ import {
 // INITIALISATION
 // ─────────────────────────────────────────────
 
+export let currentMode = 'pc';
+
 export function initUI() {
-    const isTvMode = new URLSearchParams(window.location.search).get('mode') === 'tv';
+    const overlay = document.getElementById('mode-selection-overlay');
+    const btnTv = document.getElementById('btn-select-tv');
+    const btnRemote = document.getElementById('btn-select-remote');
+    const btnPc = document.getElementById('btn-select-pc');
+
+    if (overlay && btnTv && btnRemote && btnPc) {
+        btnTv.addEventListener('click', () => {
+            currentMode = 'tv';
+            document.body.classList.add('is-tv-mode');
+            overlay.classList.add('hidden');
+            initRealtimeZapping((payload) => {
+                console.log('[REALTIME TV] Événement reçu, mise à jour du catalogue en cours.');
+            });
+            fetchSeries();
+        });
+
+        btnRemote.addEventListener('click', () => {
+            currentMode = 'remote';
+            document.body.classList.add('is-remote-mode');
+            overlay.classList.add('hidden');
+            fetchSeries();
+        });
+
+        btnPc.addEventListener('click', () => {
+            currentMode = 'pc';
+            overlay.classList.add('hidden');
+            fetchSeries();
+        });
+    }
 
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
@@ -52,9 +82,9 @@ export function initUI() {
         }
     });
 
-    // Clic sur une carte pour ouvrir l'accordéon des saisons (uniquement si pas en mode TV)
+    // Clic sur une carte pour ouvrir l'accordéon des saisons (uniquement si pas en mode TV ni télécommande)
     container.addEventListener('click', (e) => {
-        if (isTvMode) return;
+        if (currentMode === 'tv' || currentMode === 'remote') return;
         
         // Ignorer si on clique sur un select, un bouton ou le panneau de saisons déjà ouvert
         if (e.target.closest('select') || e.target.closest('button') || e.target.closest('.saisons-panel')) {
@@ -104,14 +134,6 @@ export function initUI() {
 
     // Barre de recherche TMDB
     initSearchBar();
-
-    // Mode TV : Branchement de la synchronisation Realtime
-    if (isTvMode) {
-        document.body.classList.add('is-tv-mode');
-        initRealtimeZapping((payload) => {
-            console.log('[REALTIME TV] Événement reçu, mise à jour du catalogue en cours.');
-        });
-    }
 }
 
 // ─────────────────────────────────────────────
@@ -335,16 +357,21 @@ export function renderSeries(seriesList) {
     const container = document.getElementById('series-container');
     container.innerHTML = '';
 
-    const isTvMode = new URLSearchParams(window.location.search).get('mode') === 'tv';
+    const isTvMode = currentMode === 'tv';
+    const isRemoteMode = currentMode === 'remote';
 
-    if (isTvMode) {
+    if (isTvMode || isRemoteMode) {
         const activeSerie = seriesList[0];
         if (!activeSerie) {
-            container.innerHTML = `
+            container.innerHTML = isTvMode ? `
                 <div class="tv-empty-state">
                     <div class="tv-empty-icon">📺</div>
                     <h2 class="tv-empty-title">Inbox Trié !</h2>
                     <p class="tv-empty-subtitle">SéréniTV est prêt. Ajoutez ou classez des séries depuis votre mobile.</p>
+                </div>
+            ` : `
+                <div class="empty-state">
+                    Tous les titres de l'Inbox ont été classés ! 🎉
                 </div>
             `;
             updateRemoteDeckVisibility(0);
@@ -352,7 +379,7 @@ export function renderSeries(seriesList) {
         }
 
         const card = document.createElement('div');
-        card.className = 'serie-card tv-card';
+        card.className = isTvMode ? 'serie-card tv-card' : 'serie-card remote-active-card';
         card.dataset.serieId = activeSerie.id;
 
         const badge = activeSerie.statut_production === 'Terminée'
@@ -451,14 +478,15 @@ export function renderSeries(seriesList) {
  * Met à jour la visibilité de la télécommande sur mobile.
  */
 function updateRemoteDeckVisibility(seriesCount) {
-    const isTvMode = new URLSearchParams(window.location.search).get('mode') === 'tv';
+    const isTvMode = currentMode === 'tv';
     const remoteDeck = document.getElementById('remote-deck');
     if (!remoteDeck) return;
 
     const activeNavBtn = document.querySelector('.nav-btn.active');
     const isInboxTab = activeNavBtn && activeNavBtn.dataset.filter === 'all';
     
-    if (!isTvMode && isInboxTab && seriesCount > 0) {
+    // Si on est en mode télécommande OU (mode PC et onglet Inbox avec des séries)
+    if (currentMode === 'remote' || (currentMode === 'pc' && isInboxTab && seriesCount > 0)) {
         remoteDeck.hidden = false;
     } else {
         remoteDeck.hidden = true;
