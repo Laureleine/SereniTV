@@ -35,28 +35,31 @@ export const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
 
 export async function fetchSeries() {
     try {
-        // Jointure avec utilisateur_series pour récupérer le statut de visionnage
-        // en une seule requête (pas de N+1).
+        // LEFT JOIN propre sans filtrage bloquant au niveau PostgREST
+        // pour conserver toutes les lignes parentes (inbox / non classées)
         const { data, error } = await supabase
             .from('series')
             .select(`
                 *,
-                utilisateur_series!left (
+                utilisateur_series (
+                    user_id,
                     statut_visionnage
                 )
             `)
-            .eq('utilisateur_series.user_id', MOCK_USER_ID)
             .order('titre');
 
         if (error) throw error;
 
-        // Aplatir : remonter statut_visionnage directement sur l'objet série
-        seriesData = (data || []).map(s => ({
-            ...s,
-            statut_visionnage: s.utilisateur_series?.[0]?.statut_visionnage ?? null,
-        }));
+        // Aplatir et filtrer pour l'utilisateur courant sur le client
+        seriesData = (data || []).map(s => {
+            const userStatus = (s.utilisateur_series || []).find(us => us.user_id === MOCK_USER_ID);
+            return {
+                ...s,
+                statut_visionnage: userStatus ? userStatus.statut_visionnage : null,
+            };
+        });
 
-        renderSeries(seriesData);
+        applyFilters();
     } catch (error) {
         console.error('[FETCH] Erreur fetchSeries:', error);
     }
@@ -490,10 +493,25 @@ export async function demarrerSerie(serieId, numeroSaison, userId = MOCK_USER_ID
  * @param {string} userId
  * @returns {Promise<{success: boolean, error?: any}>}
  */
+/**
+ * Met à jour à chaud le statut d'une série dans l'état local en mémoire.
+ */
+export function updateLocalSeriesStatus(serieId, statut) {
+    const idx = seriesData.findIndex(s => s.id === serieId);
+    if (idx !== -1) {
+        seriesData[idx].statut_visionnage = statut || null;
+    }
+}
+
 export async function updateStatutGlobal(serieId, statutGlobal, userId = MOCK_USER_ID) {
     try {
         console.log(`[STATUT] updateStatutGlobal — serie_id=${serieId}, statut=${statutGlobal}, user_id=${userId}`);
 
+        // 1. Mise à jour immédiate optimiste de l'état local en mémoire
+        updateLocalSeriesStatus(serieId, statutGlobal);
+        applyFilters();
+
+        // 2. Envoi asynchrone à Supabase
         const { data, error } = await supabase
             .from('utilisateur_series')
             .upsert(
@@ -530,6 +548,11 @@ let currentPlatformFilter = null; // 'Netflix' ou null
  */
 export function applyFilters() {
     let filtered = seriesData;
+
+    // Règle d'exclusion stricte : Exclure systématiquement les séries ignorées de tous les autres onglets
+    if (currentStatusFilter !== 'ignorees') {
+        filtered = filtered.filter(s => s.statut_visionnage !== 'Sans intérêt');
+    }
 
     // 1. Filtrer par statut de visionnage (ou boîte de réception)
     if (currentStatusFilter === 'all') {
