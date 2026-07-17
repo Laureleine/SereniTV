@@ -536,9 +536,10 @@ export function renderSeries(seriesList) {
                         aria-label="Statut de visionnage de ${serie.titre}"
                     >
                         <option value="" disabled ${!serie.statut_visionnage ? 'selected' : ''}>Classer cette série…</option>
-                        ${STATUTS_VISIONNAGE.map(s =>
-                            `<option value="${s}" ${serie.statut_visionnage === s ? 'selected' : ''}>${s}</option>`
-                        ).join('')}
+                        ${STATUTS_VISIONNAGE.map(s => {
+                            const label = s === 'Sans intérêt' ? 'Ignorée' : (s === 'A voir' ? 'À voir' : s);
+                            return `<option value="${s}" ${serie.statut_visionnage === s ? 'selected' : ''}>${label}</option>`;
+                        }).join('')}
                     </select>
                 </div>
             </div>
