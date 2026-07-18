@@ -17,7 +17,7 @@ envContent.split('\n').forEach(line => {
 
 const SUPABASE_URL = env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
-const TMDB_ACCESS_TOKEN = env.VITE_TMDB_ACCESS_TOKEN;
+const TMDB_ACCESS_TOKEN = env.TMDB_ACCESS_TOKEN;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !TMDB_ACCESS_TOKEN) {
     console.error('❌ Variables d\'environnement manquantes dans le fichier .env !');

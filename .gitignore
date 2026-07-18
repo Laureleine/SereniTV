@@ -6,3 +6,17 @@ dist/
 .DS_Store
 *.log
 .gemini/
+
+# Packaging Android (Bubblewrap/Gradle) — clé de signature et artefacts de build
+android.keystore
+*.apk
+*.aab
+*.idsig
+app/build/
+build/
+.gradle/
+local.properties
+manifest-checksum.txt
+
+.vercel
+supabase/.temp

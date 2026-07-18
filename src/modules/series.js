@@ -4,27 +4,28 @@ import { renderSeries } from './ui.js';
 let seriesData = [];
 
 // ─────────────────────────────────────────────
-// CONFIGURATION TMDB (via variables d'environnement Vite)
+// APPEL DES EDGE FUNCTIONS (le token TMDB et les écritures restent côté serveur)
 // ─────────────────────────────────────────────
-const TMDB_BASE_URL    = 'https://api.themoviedb.org/3';
-const TMDB_ACCESS_TOKEN = import.meta.env.VITE_TMDB_ACCESS_TOKEN;
-// On préfère le Bearer token (plus sécurisé) à la query-param api_key
-const TMDB_HEADERS = {
-    'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
-    'Content-Type':  'application/json',
-};
+const EDGE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+const APP_SHARED_SECRET  = import.meta.env.VITE_APP_SHARED_SECRET;
+
+async function callEdgeFunction(name, payload) {
+    const response = await fetch(`${EDGE_FUNCTIONS_URL}/${name}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'x-app-secret': APP_SHARED_SECRET,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `Erreur ${name} (HTTP ${response.status})`);
+    return data;
+}
 
 // Durée du cache local avant re-synchro TMDB
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
-
-/**
- * Mappe le statut brut TMDB vers nos valeurs métier.
- * @param {string} tmdbStatus
- * @returns {'En cours' | 'Terminée'}
- */
-function mapperStatutTMDB(tmdbStatus) {
-    return (tmdbStatus === 'Ended' || tmdbStatus === 'Canceled') ? 'Terminée' : 'En cours';
-}
 
 // UUID simulé en attendant l'authentification Supabase Auth
 export const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
@@ -66,183 +67,29 @@ export async function fetchSeries() {
 }
 
 // ─────────────────────────────────────────────
-// COUCHE TMDB
+// COUCHE TMDB (proxifiée via Edge Function — le token TMDB reste côté serveur)
 // ─────────────────────────────────────────────
 
 /**
- * Appelle l'API TMDB pour une série et retourne les données brutes normalisées.
- * Lève une exception si l'API est indisponible ou renvoie une erreur.
- * @param {number} tmdbId - ID TMDB de la série
- * @returns {Promise<{titre, synopsis, statut_production, saisons: Array}>}
- */
-async function fetchTMDB(tmdbId) {
-    const url = `${TMDB_BASE_URL}/tv/${tmdbId}?language=fr-FR&append_to_response=watch/providers`;
-    const response = await fetch(url, { headers: TMDB_HEADERS });
-
-    if (!response.ok) {
-        throw new Error(`[TMDB] Erreur HTTP ${response.status} pour tmdb_id=${tmdbId}`);
-    }
-
-    const d = await response.json();
-
-    const providers = d["watch/providers"]?.results?.FR;
-    let detectedPlatform = d.networks?.[0]?.name || null;
-    let watchUrl = null;
-
-    if (providers) {
-        // Order of preference: Netflix (8), Prime Video (119), Disney+ (337)
-        const targetProviders = [
-            { id: 8, name: 'Netflix', keywords: ['netflix'] },
-            { id: 119, name: 'Prime Video', keywords: ['prime video', 'amazon prime'] },
-            { id: 337, name: 'Disney+', keywords: ['disney'] }
-        ];
-
-        if (providers.flatrate) {
-            for (const target of targetProviders) {
-                const found = providers.flatrate.find(p => 
-                    p.provider_id === target.id || 
-                    (p.provider_name && target.keywords.some(k => p.provider_name.toLowerCase().includes(k)))
-                );
-                if (found) {
-                    detectedPlatform = target.name;
-                    watchUrl = providers.link || null;
-                    break;
-                }
-            }
-        }
-    }
-
-    return {
-        titre:             d.name,
-        // Fallback sur la version originale si pas de traduction FR
-        synopsis:          d.overview || d.original_name,
-        affiche_path:      d.poster_path,
-        backdrop_path:     d.backdrop_path,
-        statut_production: mapperStatutTMDB(d.status),
-        plateforme:        detectedPlatform,
-        watch_url:         watchUrl,
-        // On filtre la saison 0 (Spéciaux / Making-of) qui n'a pas de valeur métier
-        saisons: (d.seasons || [])
-            .filter(s => s.season_number > 0)
-            .map(s => ({
-                numero_saison:   s.season_number,
-                nombre_episodes: s.episode_count,
-            })),
-    };
-}
-
-/**
- * Cherche des séries sur TMDB par nom (endpoint /search/tv).
- * Retourne un tableau de suggestions prêtes pour l'affichage.
+ * Cherche des séries sur TMDB par nom.
  * @param {string} query - Texte saisi par l'utilisateur
  * @returns {Promise<Array<{tmdbId, titre, annee, affiche_path, nb_saisons}>>}
  */
 export async function rechercherSeriesTMDB(query) {
     if (!query || query.trim().length < 2) return [];
-
-    const url = `${TMDB_BASE_URL}/search/tv?query=${encodeURIComponent(query)}&language=fr-FR&page=1`;
-    const response = await fetch(url, { headers: TMDB_HEADERS });
-
-    if (!response.ok) {
-        throw new Error(`[TMDB Search] Erreur HTTP ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    // On prend les 7 premiers résultats pertinents (avec au moins un titre)
-    return (data.results || [])
-        .filter(r => r.name && r.id)
-        .slice(0, 7)
-        .map(r => ({
-            tmdbId:       r.id,
-            titre:        r.name,
-            titre_orig:   r.original_name !== r.name ? r.original_name : null,
-            annee:        r.first_air_date ? r.first_air_date.slice(0, 4) : '—',
-            affiche_path: r.poster_path,
-            popularite:   r.popularity,
-        }));
+    return callEdgeFunction('tmdb-search', { query });
 }
 
 /**
- * Synchronise une série avec TMDB : upsert dans `series` + upsert en masse dans `saisons`.
- * Peut être appelée pour une série déjà connue (rafraîchissement) ou une toute nouvelle.
+ * Synchronise une série avec TMDB (fetch + upsert catalogue) via l'Edge Function `sync-serie`.
+ * Le token TMDB et l'écriture en base restent côté serveur (service_role) — le client
+ * n'a plus les droits d'écriture directs sur `series`/`saisons`.
  *
  * @param {number} tmdbId - ID TMDB à synchroniser
  * @returns {Promise<object>} La série Supabase à jour (avec ses saisons)
  */
 export async function synchroniserSerieAvecTMDB(tmdbId) {
-    // 1. Récupération des données fraîches depuis TMDB
-    const tmdb = await fetchTMDB(tmdbId);
-    const now  = new Date().toISOString();
-
-    // 2. Upsert de la série dans notre catalogue
-    //    onConflict sur tmdb_id → INSERT si nouvelle, UPDATE si existante
-    const { data: serieUpserted, error: serieError } = await supabase
-        .from('series')
-        .upsert(
-            {
-                tmdb_id:           tmdbId,
-                titre:             tmdb.titre,
-                synopsis:          tmdb.synopsis,
-                affiche_path:      tmdb.affiche_path,
-                backdrop_path:     tmdb.backdrop_path,
-                statut_production: tmdb.statut_production,
-                plateforme:        tmdb.plateforme,
-                watch_url:         tmdb.watch_url,
-                derniere_maj_tmdb: now,
-            },
-            { onConflict: 'tmdb_id' }
-        )
-        .select('id')
-        .single();
-
-    if (serieError) throw serieError;
-
-    const serieId = serieUpserted.id;
-
-    // 3. Récupérer les saisons locales actuelles pour la comparaison
-    const { data: saisonsLocales } = await supabase
-        .from('saisons')
-        .select('id, numero_saison, nombre_episodes')
-        .eq('serie_id', serieId);
-
-    const localesMap = new Map((saisonsLocales || []).map(s => [s.numero_saison, s]));
-
-    // 4. Construire le payload d'upsert uniquement pour les saisons nouvelles ou modifiées
-    //    (optimisation : évite de ré-écrire des lignes inchangées)
-    const saisonsPayload = tmdb.saisons.reduce((acc, s) => {
-        const locale = localesMap.get(s.numero_saison);
-        if (!locale || locale.nombre_episodes !== s.nombre_episodes) {
-            acc.push({
-                ...(locale && { id: locale.id }), // conserve l'id pour forcer un UPDATE
-                serie_id:        serieId,
-                numero_saison:   s.numero_saison,
-                nombre_episodes: s.nombre_episodes,
-            });
-        }
-        return acc;
-    }, []);
-
-    if (saisonsPayload.length > 0) {
-        const { error: saisonsError } = await supabase
-            .from('saisons')
-            .upsert(saisonsPayload, { onConflict: 'serie_id, numero_saison' });
-
-        if (saisonsError) throw saisonsError;
-        console.log(`[TMDB] ✓ ${saisonsPayload.length} saison(s) synchronisée(s) pour tmdb_id=${tmdbId}.`);
-    } else {
-        console.log(`[TMDB] ✓ Saisons déjà à jour pour tmdb_id=${tmdbId}.`);
-    }
-
-    // 5. Retourner la série complète (fraîche depuis Supabase, avec ses saisons)
-    const { data: serieComplete, error: reloadError } = await supabase
-        .from('series')
-        .select('*, saisons (*)')
-        .eq('id', serieId)
-        .single();
-
-    if (reloadError) throw reloadError;
-    return serieComplete;
+    return callEdgeFunction('sync-serie', { tmdbId });
 }
 
 /**
@@ -397,15 +244,7 @@ export async function aDejaUnSuiviSaisons(serieId, userId = MOCK_USER_ID) {
  */
 export async function updateStatutUneSaison(saisonId, statut, userId = MOCK_USER_ID) {
     try {
-        const { error } = await supabase
-            .from('utilisateur_saisons')
-            .upsert(
-                { user_id: userId, saison_id: saisonId, statut_saison: statut },
-                { onConflict: 'user_id, saison_id' }
-            );
-
-        if (error) throw error;
-
+        await callEdgeFunction('update-user-status', { action: 'update_saison_statut', userId, saisonId, statut });
         console.log(`[SAISON] ✓ Saison ${saisonId} → ${statut}`);
         return { success: true };
     } catch (err) {
@@ -439,47 +278,14 @@ export async function appliquerStatutsSaisons(
     userId = MOCK_USER_ID
 ) {
     try {
-        // 1. Récupérer toutes les saisons du catalogue
-        const { data: saisons, error: saisonsError } = await supabase
-            .from('saisons')
-            .select('id, numero_saison')
-            .eq('serie_id', serieId)
-            .order('numero_saison');
-
-        if (saisonsError) throw saisonsError;
-        if (!saisons || saisons.length === 0) throw new Error("Aucune saison trouvée.");
-
-        // 2. Construire le payload en une seule passe
-        const saisonsPayload = saisons.map(saison => ({
-            user_id:   userId,
-            saison_id: saison.id,
-            statut_saison:
-                saison.numero_saison < numeroSaison  ? 'Terminée'
-              : saison.numero_saison === numeroSaison ? statutSaisonPivot
-              : 'Pas commencée',
-        }));
-
-        // 3. Upsert en masse — une seule requête HTTP
-        const { error: upsertError } = await supabase
-            .from('utilisateur_saisons')
-            .upsert(saisonsPayload, { onConflict: 'user_id, saison_id' });
-
-        if (upsertError) throw upsertError;
-
-        // 4. Mise à jour du statut global de la série
-        const { error: serieError } = await supabase
-            .from('utilisateur_series')
-            .upsert(
-                {
-                    user_id:           userId,
-                    serie_id:          serieId,
-                    statut_visionnage: statutGlobal,
-                    updated_at:        new Date().toISOString(),
-                },
-                { onConflict: 'user_id, serie_id' }
-            );
-
-        if (serieError) throw serieError;
+        await callEdgeFunction('update-user-status', {
+            action: 'apply_saisons_statuts',
+            userId,
+            serieId,
+            numeroSaison,
+            statutGlobal,
+            statutSaisonPivot,
+        });
 
         console.log(`[STATUT] ✓ Série ${serieId} → ${statutGlobal} (pivot saison ${numeroSaison}).`);
         return { success: true };
@@ -532,21 +338,13 @@ export async function updateStatutGlobal(serieId, statutGlobal, userId = MOCK_US
         updateLocalSeriesStatus(serieId, statutGlobal);
         applyFilters();
 
-        // 2. Envoi asynchrone à Supabase
-        const { data, error } = await supabase
-            .from('utilisateur_series')
-            .upsert(
-                {
-                    user_id:           userId,
-                    serie_id:          serieId,
-                    statut_visionnage: statutGlobal,
-                    updated_at:        new Date().toISOString(),
-                },
-                { onConflict: 'user_id, serie_id' }
-            )
-            .select();
-
-        if (error) throw error;
+        // 2. Envoi asynchrone via l'Edge Function (écriture protégée côté serveur)
+        await callEdgeFunction('update-user-status', {
+            action: 'update_statut_global',
+            userId,
+            serieId,
+            statut: statutGlobal,
+        });
 
         console.log(`[STATUT] ✓ Statut global série ${serieId} → ${statutGlobal}.`);
         return { success: true };
