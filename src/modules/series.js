@@ -86,10 +86,31 @@ async function fetchTMDB(tmdbId) {
     const d = await response.json();
 
     const providers = d["watch/providers"]?.results?.FR;
-    const hasNetflix = providers && (providers.flatrate || []).some(
-        p => p.provider_name && p.provider_name.toLowerCase().includes('netflix')
-    );
-    const watchUrl = hasNetflix ? (providers.link || null) : null;
+    let detectedPlatform = d.networks?.[0]?.name || null;
+    let watchUrl = null;
+
+    if (providers) {
+        // Order of preference: Netflix (8), Prime Video (119), Disney+ (337)
+        const targetProviders = [
+            { id: 8, name: 'Netflix', keywords: ['netflix'] },
+            { id: 119, name: 'Prime Video', keywords: ['prime video', 'amazon prime'] },
+            { id: 337, name: 'Disney+', keywords: ['disney'] }
+        ];
+
+        if (providers.flatrate) {
+            for (const target of targetProviders) {
+                const found = providers.flatrate.find(p => 
+                    p.provider_id === target.id || 
+                    (p.provider_name && target.keywords.some(k => p.provider_name.toLowerCase().includes(k)))
+                );
+                if (found) {
+                    detectedPlatform = target.name;
+                    watchUrl = providers.link || null;
+                    break;
+                }
+            }
+        }
+    }
 
     return {
         titre:             d.name,
@@ -98,7 +119,7 @@ async function fetchTMDB(tmdbId) {
         affiche_path:      d.poster_path,
         backdrop_path:     d.backdrop_path,
         statut_production: mapperStatutTMDB(d.status),
-        plateforme:        d.networks?.[0]?.name || null,
+        plateforme:        detectedPlatform,
         watch_url:         watchUrl,
         // On filtre la saison 0 (Spéciaux / Making-of) qui n'a pas de valeur métier
         saisons: (d.seasons || [])
@@ -610,6 +631,21 @@ export function initRealtimeZapping(callback, onLaunchNetflix, onPreviewSeries) 
             },
             async (payload) => {
                 console.log('[REALTIME] Changement détecté dans utilisateur_series:', payload);
+                // On recharge les séries locales pour avoir la donnée fraîche
+                await fetchSeries();
+                // On notifie le callback (l'UI)
+                if (callback) callback(payload);
+            }
+        )
+        .on(
+            'postgres_changes',
+            {
+                event: '*',
+                schema: 'public',
+                table: 'series'
+            },
+            async (payload) => {
+                console.log('[REALTIME] Changement détecté dans series:', payload);
                 // On recharge les séries locales pour avoir la donnée fraîche
                 await fetchSeries();
                 // On notifie le callback (l'UI)

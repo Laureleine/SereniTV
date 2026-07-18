@@ -16,6 +16,72 @@ import {
     MOCK_USER_ID,
 } from './series.js';
 
+/**
+ * Génère le lien de lecture optimal ou le lien de recherche de repli pour la plateforme.
+ * @param {object} serie - L'objet série
+ * @returns {{url: string, name: string, class: string}} Les infos du lien de lecture
+ */
+export function getPlayLink(serie) {
+    const platform = (serie.plateforme || '').toLowerCase();
+    const titre = serie.titre || '';
+    const watchUrl = serie.watch_url || '';
+
+    if (platform.includes('netflix')) {
+        const match = watchUrl.match(/(?:netflix\.com\/title\/|title\/|netflix:\/\/title\/)([0-9]+)/i);
+        if (match && match[1]) {
+            return {
+                url: `netflix://title/${match[1]}`,
+                name: 'Netflix',
+                class: 'netflix'
+            };
+        }
+        return {
+            url: `https://www.netflix.com/search?q=${encodeURIComponent(titre)}`,
+            name: 'Netflix',
+            class: 'netflix'
+        };
+    }
+
+    if (platform.includes('prime video') || platform.includes('amazon')) {
+        const match = watchUrl.match(/(?:detail\/|dp\/|gp\/video\/detail\/)([a-zA-Z0-9_]+)/i);
+        if (match && match[1]) {
+            return {
+                url: `primevideo://detail/${match[1]}`,
+                name: 'Prime Video',
+                class: 'primevideo'
+            };
+        }
+        return {
+            url: `https://www.primevideo.com/search/?phrase=${encodeURIComponent(titre)}`,
+            name: 'Prime Video',
+            class: 'primevideo'
+        };
+    }
+
+    if (platform.includes('disney')) {
+        const match = watchUrl.match(/(?:series\/[^/]+\/|video\/)([a-zA-Z0-9-]+)/i);
+        if (match && match[1]) {
+            return {
+                url: `https://www.disneyplus.com/video/${match[1]}`,
+                name: 'Disney+',
+                class: 'disney'
+            };
+        }
+        return {
+            url: `https://www.disneyplus.com/search?q=${encodeURIComponent(titre)}`,
+            name: 'Disney+',
+            class: 'disney'
+        };
+    }
+
+    // Repli ultime : recherche Netflix (jamais IMDb)
+    return {
+        url: `https://www.netflix.com/search?q=${encodeURIComponent(titre)}`,
+        name: 'Netflix',
+        class: 'netflix'
+    };
+}
+
 // ─────────────────────────────────────────────
 // INITIALISATION
 // ─────────────────────────────────────────────
@@ -38,18 +104,11 @@ export function initUI() {
             initRealtimeZapping(
                 (payload) => {
                     console.log('[REALTIME TV] Événement reçu, mise à jour du catalogue en cours.');
+                    tvPreviewOverride = null; // Réinitialise la prévisualisation pour afficher la série suivante
                 },
                 (watchUrl) => {
-                    console.log('[REALTIME TV] Lancement Netflix demandé via mobile! URL:', watchUrl);
-                    let targetUrl = watchUrl;
-                    const titleMatch = watchUrl.match(/(?:netflix\.com\/title\/|title\/|netflix:\/\/title\/)([0-9]+)/i);
-                    if (titleMatch && titleMatch[1]) {
-                        targetUrl = `netflix://title/${titleMatch[1]}`;
-                        console.log('[REALTIME TV] Deep Link Netflix généré :', targetUrl);
-                    } else {
-                        console.log('[REALTIME TV] Pas d\'ID Netflix extrait, redirection classique.');
-                    }
-                    window.location.href = targetUrl;
+                    console.log('[REALTIME TV] Lancement demandé via mobile! URL:', watchUrl);
+                    window.location.href = watchUrl;
                 },
                 (series) => {
                     console.log('[REALTIME TV] Preview demandée pour la série :', series ? series.titre : 'null (clear)');
@@ -478,22 +537,18 @@ export function renderSeries(seriesList) {
                 </div>
                 ${activeSerie.plateforme ? `<div class="serie-platform-badge">${activeSerie.plateforme}</div>` : ''}
                 <p class="serie-synopsis">${activeSerie.synopsis || 'Aucun résumé disponible.'}</p>
-                ${activeSerie.watch_url ? (() => {
-                    let tvUrl = activeSerie.watch_url;
-                    const titleMatch = tvUrl.match(/(?:netflix\.com\/title\/|title\/|netflix:\/\/title\/)([0-9]+)/i);
-                    if (titleMatch && titleMatch[1]) {
-                        tvUrl = `netflix://title/${titleMatch[1]}`;
-                    }
+                ${(() => {
+                    const playLink = getPlayLink(activeSerie);
                     return isTvMode ? `
-                        <a href="${tvUrl}" class="btn-netflix-launch">
-                            🍿 Lancer sur Netflix
+                        <a href="${playLink.url}" class="btn-netflix-launch btn-launch-${playLink.class}">
+                            🍿 Lancer sur ${playLink.name}
                         </a>
                     ` : `
-                        <button data-watch-url="${activeSerie.watch_url}" class="btn-netflix-launch">
+                        <button data-watch-url="${playLink.url}" class="btn-netflix-launch btn-launch-${playLink.class}">
                             📺 Lancer sur la Télévision
                         </button>
                     `;
-                })() : ''}
+                })()}
             </div>
         `;
 
