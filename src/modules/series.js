@@ -1,5 +1,5 @@
 import { supabase } from '../supabase.js';
-import { renderSeries } from './ui.js';
+import { renderSeries, renderFetchError } from './ui.js';
 
 let seriesData = [];
 
@@ -63,6 +63,7 @@ export async function fetchSeries() {
         applyFilters();
     } catch (error) {
         console.error('[FETCH] Erreur fetchSeries:', error);
+        renderFetchError();
     }
 }
 

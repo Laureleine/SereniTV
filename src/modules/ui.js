@@ -83,6 +83,33 @@ export function getPlayLink(serie) {
 }
 
 // ─────────────────────────────────────────────
+// NOTIFICATIONS (toasts non bloquants)
+// ─────────────────────────────────────────────
+
+let _toastTimer = null;
+
+/**
+ * Affiche une notification non bloquante en bas d'écran.
+ * @param {string} message
+ * @param {'error'|'success'} [type='error']
+ */
+export function showToast(message, type = 'error') {
+    const toast = document.getElementById('toast-container');
+    if (!toast) {
+        console.error(message);
+        return;
+    }
+
+    toast.textContent = message;
+    toast.className = `toast-container toast-container--${type} is-visible`;
+
+    clearTimeout(_toastTimer);
+    _toastTimer = setTimeout(() => {
+        toast.classList.remove('is-visible');
+    }, 4000);
+}
+
+// ─────────────────────────────────────────────
 // INITIALISATION
 // ─────────────────────────────────────────────
 
@@ -475,6 +502,24 @@ function setSearchStatus(el, type, message) {
 
 const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Terminée', 'Abandonnée', 'Sans intérêt', 'Peut-être'];
 
+/**
+ * Affiche un état d'erreur avec bouton de reprise quand le chargement du catalogue échoue
+ * (ex : coupure réseau, Supabase indisponible).
+ */
+export function renderFetchError() {
+    const container = document.getElementById('series-container');
+    if (!container) return;
+
+    container.innerHTML = `
+        <div class="empty-state empty-state--error">
+            <p>Impossible de charger vos séries. Vérifiez votre connexion.</p>
+            <button id="btn-retry-fetch" class="btn btn--primary">Réessayer</button>
+        </div>
+    `;
+
+    document.getElementById('btn-retry-fetch').addEventListener('click', () => fetchSeries());
+}
+
 export function renderSeries(seriesList) {
     _dernierRenduSeries = [...seriesList];
 
@@ -650,7 +695,7 @@ async function onSaisonStatutChange(event) {
     try {
         const result = await updateStatutUneSaison(saisonId, statut, MOCK_USER_ID);
         if (!result.success) {
-            alert("Erreur lors de la mise à jour de la saison.");
+            showToast("Erreur lors de la mise à jour de la saison.");
         }
     } finally {
         select.disabled = false;
@@ -699,7 +744,7 @@ async function handleStatutSimple(serieId, statut, selectElement) {
     if (result.success) {
         await fetchSeries();
     } else {
-        alert("Une erreur est survenue lors de l'enregistrement. Voir la console pour les détails.");
+        showToast("Une erreur est survenue lors de l'enregistrement. Voir la console pour les détails.");
         selectElement.value = '';
     }
 }
@@ -726,7 +771,7 @@ async function handleEnCours(serieId, serieTitre, selectElement) {
         if (result.success) {
             await fetchSeries();
         } else {
-            alert("Une erreur est survenue lors de l'enregistrement.");
+            showToast("Une erreur est survenue lors de l'enregistrement.");
             if (selectElement) selectElement.value = '';
         }
     } else {
@@ -756,7 +801,7 @@ async function ouvrirModal(config) {
         const saisons = await getSaisonsAvecStatut(serieId, MOCK_USER_ID);
 
         if (!saisons || saisons.length === 0) {
-            alert("Cette série n'a aucune saison enregistrée.");
+            showToast("Cette série n'a aucune saison enregistrée.");
             selectElement.value = '';
             return;
         }
@@ -785,7 +830,7 @@ async function ouvrirModal(config) {
 
     } catch (err) {
         console.error("[MODAL] Erreur chargement saisons:", err);
-        alert("Impossible de charger les saisons. Veuillez réessayer.");
+        showToast("Impossible de charger les saisons. Veuillez réessayer.");
         if (selectElement) selectElement.value = '';
     }
 }
@@ -827,7 +872,7 @@ async function onConfirmerModal() {
         fermerModal(false);
         await fetchSeries();
     } else {
-        alert("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
+        showToast("Une erreur est survenue lors de l'enregistrement. Veuillez réessayer.");
     }
 }
 
