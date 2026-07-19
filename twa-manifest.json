@@ -1,0 +1,48 @@
+{
+  "packageId": "com.serenitv.app",
+  "host": "sereni-tv.vercel.app",
+  "name": "SéréniTV - La Zapette Ultime",
+  "launcherName": "SéréniTV",
+  "display": "standalone",
+  "themeColor": "#E50914",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#111111",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://sereni-tv.vercel.app/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "C:\\Users\\amara\\-=- Apps -=-\\SéréniTV\\android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "2",
+  "appVersionCode": 2,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://sereni-tv.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://sereni-tv.vercel.app/",
+  "minSdkVersion": 21,
+  "orientation": "any",
+  "fingerprints": [
+    "56:F5:F8:E5:F3:5E:75:F8:20:99:89:16:6D:1D:5D:E6:F8:24:07:D3:33:19:2E:86:E4:CA:41:26:6A:CE:D8:F5"
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "2"
+}

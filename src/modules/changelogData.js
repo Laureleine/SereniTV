@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.1.3',
+        date: '2026-07-19',
+        changes: [
+            "Correction de l'app Android (TWA) qui s'ouvrait dans un navigateur au lieu du plein écran natif : ajout du fichier assetlinks.json manquant, requis pour la vérification de confiance entre l'app et le site.",
+        ],
+    },
+    {
         version: '1.1.2',
         date: '2026-07-19',
         changes: [

@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.serenitv.app",
+      "sha256_cert_fingerprints": [
+        "56:F5:F8:E5:F3:5E:75:F8:20:99:89:16:6D:1D:5D:E6:F8:24:07:D3:33:19:2E:86:E4:CA:41:26:6A:CE:D8:F5"
+      ]
+    }
+  }
+]
