@@ -15,6 +15,7 @@ import { fermerModal, onConfirmerModal } from './ui/modal.js';
 import { onStatutChange, onSaisonStatutChange } from './ui/statusHandlers.js';
 import { initSearchBar } from './ui/searchBar.js';
 import { getSavedMode, saveMode, clearSavedMode } from './ui/deviceMode.js';
+import { initChangelogBadge } from './ui/changelog.js';
 
 // ─────────────────────────────────────────────
 // INITIALISATION
@@ -218,4 +219,7 @@ export function initUI() {
 
     // Barre de recherche TMDB
     initSearchBar();
+
+    // Badge de version + notes de version
+    initChangelogBadge();
 }

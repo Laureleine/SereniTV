@@ -29,6 +29,23 @@
     <!-- ── Réinitialisation du rôle d'appareil (PC/Télé/Télécommande) ── -->
     <button id="btn-reset-mode" class="btn-reset-mode" aria-label="Changer de mode" title="Changer de mode">↺</button>
 
+    <!-- ── Badge de version (notes de version au clic) ── -->
+    <button id="version-badge" class="version-badge" aria-label="Voir les notes de version"></button>
+
+    <!-- ── Notes de version ── -->
+    <div id="changelog-overlay" class="modal-overlay" role="presentation"></div>
+    <div id="changelog-modal" class="modal changelog-modal" role="dialog" aria-modal="true" aria-labelledby="changelog-titre">
+        <div class="modal-content">
+            <h2 id="changelog-titre" class="modal-titre">Notes de version</h2>
+            <div id="changelog-list" class="changelog-list">
+                <!-- Rempli dynamiquement -->
+            </div>
+            <div class="modal-actions">
+                <button id="changelog-fermer" class="btn btn--ghost">Fermer</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ── Écran de Sélection de Mode (Overlay de démarrage) ── -->
     <div id="mode-selection-overlay" class="mode-selection-overlay">
         <div class="mode-selection-content">
