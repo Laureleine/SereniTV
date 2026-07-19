@@ -14,10 +14,45 @@ import { toggleSaisonsPanel } from './ui/saisonsPanel.js';
 import { fermerModal, onConfirmerModal } from './ui/modal.js';
 import { onStatutChange, onSaisonStatutChange } from './ui/statusHandlers.js';
 import { initSearchBar } from './ui/searchBar.js';
+import { getSavedMode, saveMode, clearSavedMode } from './ui/deviceMode.js';
 
 // ─────────────────────────────────────────────
 // INITIALISATION
 // ─────────────────────────────────────────────
+
+/**
+ * Active un mode (TV / Télécommande / PC) : bascule l'état, les classes CSS,
+ * le câblage temps réel si nécessaire, puis recharge le catalogue.
+ * Utilisé à la fois par les boutons de l'overlay et par la reprise automatique
+ * du rôle mémorisé sur cet appareil.
+ * @param {'tv'|'remote'|'pc'} mode
+ */
+function activerMode(mode) {
+    state.currentMode = mode;
+
+    if (mode === 'tv') {
+        document.body.classList.add('is-tv-mode');
+        initRealtimeZapping(
+            (payload) => {
+                console.log('[REALTIME TV] Événement reçu, mise à jour du catalogue en cours.');
+                state.tvPreviewOverride = null; // Réinitialise la prévisualisation pour afficher la série suivante
+            },
+            (watchUrl) => {
+                console.log('[REALTIME TV] Lancement demandé via mobile! URL:', watchUrl);
+                window.location.href = watchUrl;
+            },
+            (series) => {
+                console.log('[REALTIME TV] Preview demandée pour la série :', series ? series.titre : 'null (clear)');
+                state.tvPreviewOverride = series;
+                renderSeries(state.dernierRenduSeries);
+            }
+        );
+    } else if (mode === 'remote') {
+        document.body.classList.add('is-remote-mode');
+    }
+
+    fetchSeries();
+}
 
 export function initUI() {
     const overlay = document.getElementById('mode-selection-overlay');
@@ -25,40 +60,38 @@ export function initUI() {
     const btnRemote = document.getElementById('btn-select-remote');
     const btnPc = document.getElementById('btn-select-pc');
 
-    if (overlay && btnTv && btnRemote && btnPc) {
+    const savedMode = getSavedMode();
+
+    if (savedMode) {
+        // Rôle déjà mémorisé sur cet appareil : on ne montre plus l'overlay.
+        if (overlay) overlay.classList.add('hidden');
+        activerMode(savedMode);
+    } else if (overlay && btnTv && btnRemote && btnPc) {
         btnTv.addEventListener('click', () => {
-            state.currentMode = 'tv';
-            document.body.classList.add('is-tv-mode');
+            saveMode('tv');
             overlay.classList.add('hidden');
-            initRealtimeZapping(
-                (payload) => {
-                    console.log('[REALTIME TV] Événement reçu, mise à jour du catalogue en cours.');
-                    state.tvPreviewOverride = null; // Réinitialise la prévisualisation pour afficher la série suivante
-                },
-                (watchUrl) => {
-                    console.log('[REALTIME TV] Lancement demandé via mobile! URL:', watchUrl);
-                    window.location.href = watchUrl;
-                },
-                (series) => {
-                    console.log('[REALTIME TV] Preview demandée pour la série :', series ? series.titre : 'null (clear)');
-                    state.tvPreviewOverride = series;
-                    renderSeries(state.dernierRenduSeries);
-                }
-            );
-            fetchSeries();
+            activerMode('tv');
         });
 
         btnRemote.addEventListener('click', () => {
-            state.currentMode = 'remote';
-            document.body.classList.add('is-remote-mode');
+            saveMode('remote');
             overlay.classList.add('hidden');
-            fetchSeries();
+            activerMode('remote');
         });
 
         btnPc.addEventListener('click', () => {
-            state.currentMode = 'pc';
+            saveMode('pc');
             overlay.classList.add('hidden');
-            fetchSeries();
+            activerMode('pc');
+        });
+    }
+
+    // Réinitialisation du rôle mémorisé (visible dans les 3 modes)
+    const btnResetMode = document.getElementById('btn-reset-mode');
+    if (btnResetMode) {
+        btnResetMode.addEventListener('click', () => {
+            clearSavedMode();
+            window.location.reload();
         });
     }
 

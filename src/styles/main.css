@@ -718,6 +718,33 @@ nav {
 .toast-container--error   { border-color: var(--danger); }
 .toast-container--success { border-color: var(--green); }
 
+/* ── Bouton de réinitialisation du rôle d'appareil ─────────────── */
+.btn-reset-mode {
+    position: fixed;
+    top: 16px;
+    right: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 1.1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0.35;
+    transition: opacity 0.2s ease;
+    z-index: 500;
+}
+
+.btn-reset-mode:hover,
+.btn-reset-mode:focus-visible {
+    opacity: 1;
+}
+
 /* ── Media Queries d'Optimisation (Mobile / TV) ────────────── */
 
 /* Mode Tablette & Petits Écrans */
