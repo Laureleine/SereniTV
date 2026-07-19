@@ -15,6 +15,7 @@ import {
     diffuserSignalPreview,
     MOCK_USER_ID,
 } from './series.js';
+import { showToast } from './ui/toast.js';
 
 /**
  * Génère le lien de lecture optimal ou le lien de recherche de repli pour la plateforme.
@@ -80,33 +81,6 @@ export function getPlayLink(serie) {
         name: 'Netflix',
         class: 'netflix'
     };
-}
-
-// ─────────────────────────────────────────────
-// NOTIFICATIONS (toasts non bloquants)
-// ─────────────────────────────────────────────
-
-let _toastTimer = null;
-
-/**
- * Affiche une notification non bloquante en bas d'écran.
- * @param {string} message
- * @param {'error'|'success'} [type='error']
- */
-export function showToast(message, type = 'error') {
-    const toast = document.getElementById('toast-container');
-    if (!toast) {
-        console.error(message);
-        return;
-    }
-
-    toast.textContent = message;
-    toast.className = `toast-container toast-container--${type} is-visible`;
-
-    clearTimeout(_toastTimer);
-    _toastTimer = setTimeout(() => {
-        toast.classList.remove('is-visible');
-    }, 4000);
 }
 
 // ─────────────────────────────────────────────
