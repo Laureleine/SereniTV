@@ -10,7 +10,8 @@ import {
     diffuserSignalPreview,
     MOCK_USER_ID,
 } from './series.js';
-import { getPlayLink } from './ui/playLink.js';
+import { state } from './ui/state.js';
+import { renderSeries } from './ui/catalogRender.js';
 import { toggleSaisonsPanel } from './ui/saisonsPanel.js';
 import { fermerModal, onConfirmerModal } from './ui/modal.js';
 import { onStatutChange, onSaisonStatutChange } from './ui/statusHandlers.js';
@@ -18,10 +19,6 @@ import { onStatutChange, onSaisonStatutChange } from './ui/statusHandlers.js';
 // ─────────────────────────────────────────────
 // INITIALISATION
 // ─────────────────────────────────────────────
-
-export let currentMode = 'pc';
-let _dernierRenduSeries = [];
-let tvPreviewOverride = null;
 
 export function initUI() {
     const overlay = document.getElementById('mode-selection-overlay');
@@ -31,13 +28,13 @@ export function initUI() {
 
     if (overlay && btnTv && btnRemote && btnPc) {
         btnTv.addEventListener('click', () => {
-            currentMode = 'tv';
+            state.currentMode = 'tv';
             document.body.classList.add('is-tv-mode');
             overlay.classList.add('hidden');
             initRealtimeZapping(
                 (payload) => {
                     console.log('[REALTIME TV] Événement reçu, mise à jour du catalogue en cours.');
-                    tvPreviewOverride = null; // Réinitialise la prévisualisation pour afficher la série suivante
+                    state.tvPreviewOverride = null; // Réinitialise la prévisualisation pour afficher la série suivante
                 },
                 (watchUrl) => {
                     console.log('[REALTIME TV] Lancement demandé via mobile! URL:', watchUrl);
@@ -45,22 +42,22 @@ export function initUI() {
                 },
                 (series) => {
                     console.log('[REALTIME TV] Preview demandée pour la série :', series ? series.titre : 'null (clear)');
-                    tvPreviewOverride = series;
-                    renderSeries(_dernierRenduSeries);
+                    state.tvPreviewOverride = series;
+                    renderSeries(state.dernierRenduSeries);
                 }
             );
             fetchSeries();
         });
 
         btnRemote.addEventListener('click', () => {
-            currentMode = 'remote';
+            state.currentMode = 'remote';
             document.body.classList.add('is-remote-mode');
             overlay.classList.add('hidden');
             fetchSeries();
         });
 
         btnPc.addEventListener('click', () => {
-            currentMode = 'pc';
+            state.currentMode = 'pc';
             overlay.classList.add('hidden');
             fetchSeries();
         });
@@ -99,7 +96,7 @@ export function initUI() {
 
     // Clic sur une carte pour ouvrir l'accordéon des saisons (uniquement si pas en mode TV ni télécommande)
     container.addEventListener('click', (e) => {
-        if (currentMode === 'tv' || currentMode === 'remote') return;
+        if (state.currentMode === 'tv' || state.currentMode === 'remote') return;
         
         // Ignorer si on clique sur un select, un bouton ou le panneau de saisons déjà ouvert
         if (e.target.closest('select') || e.target.closest('button') || e.target.closest('.saisons-panel')) {
@@ -120,15 +117,15 @@ export function initUI() {
     if (btnNo && btnMaybe && btnYes) {
         const optimisteTriage = (id, statut, triggerPreview = false) => {
             // Retrouver la série active avant de la retirer
-            const activeSerie = _dernierRenduSeries.find(s => s.id === id);
+            const activeSerie = state.dernierRenduSeries.find(s => s.id === id);
 
             // 1. Mise à jour visuelle instantanée
-            const index = _dernierRenduSeries.findIndex(s => s.id === id);
+            const index = state.dernierRenduSeries.findIndex(s => s.id === id);
             if (index !== -1) {
-                _dernierRenduSeries.splice(index, 1);
-                renderSeries(_dernierRenduSeries);
+                state.dernierRenduSeries.splice(index, 1);
+                renderSeries(state.dernierRenduSeries);
             }
-            
+
             // 2. Diffuser preview ou clear preview
             if (triggerPreview && activeSerie) {
                 diffuserSignalPreview(activeSerie);
@@ -172,7 +169,7 @@ export function initUI() {
     // Intercepter le clic sur le bouton Lancer sur Netflix pour diffuser le signal à la TV
     container.addEventListener('click', (e) => {
         const btnLaunch = e.target.closest('.btn-netflix-launch');
-        if (btnLaunch && currentMode === 'remote') {
+        if (btnLaunch && state.currentMode === 'remote') {
             e.preventDefault();
             const watchUrl = btnLaunch.dataset.watchUrl;
             if (watchUrl) {
@@ -401,189 +398,3 @@ function setSearchStatus(el, type, message) {
     el.textContent = message;
     el.className   = type ? `search-bar__status search-bar__status--${type}` : 'search-bar__status';
 }
-
-// ─────────────────────────────────────────────
-// RENDU DU CATALOGUE
-// ─────────────────────────────────────────────
-
-const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Terminée', 'Abandonnée', 'Sans intérêt', 'Peut-être'];
-
-/**
- * Affiche un état d'erreur avec bouton de reprise quand le chargement du catalogue échoue
- * (ex : coupure réseau, Supabase indisponible).
- */
-export function renderFetchError() {
-    const container = document.getElementById('series-container');
-    if (!container) return;
-
-    container.innerHTML = `
-        <div class="empty-state empty-state--error">
-            <p>Impossible de charger vos séries. Vérifiez votre connexion.</p>
-            <button id="btn-retry-fetch" class="btn btn--primary">Réessayer</button>
-        </div>
-    `;
-
-    document.getElementById('btn-retry-fetch').addEventListener('click', () => fetchSeries());
-}
-
-export function renderSeries(seriesList) {
-    _dernierRenduSeries = [...seriesList];
-
-    const container = document.getElementById('series-container');
-    container.innerHTML = '';
-
-    const isTvMode = currentMode === 'tv';
-    const isRemoteMode = currentMode === 'remote';
-
-    // Gestion du fond d'écran Cinéma pour le Mode TV
-    const tvBackdrop = document.getElementById('tv-backdrop');
-    if (tvBackdrop) {
-        const activeSerie = (isTvMode && tvPreviewOverride) || ((isTvMode || isRemoteMode) ? seriesList[0] : null);
-        if (isTvMode && activeSerie && activeSerie.backdrop_path) {
-            const backdropUrl = `https://image.tmdb.org/t/p/w1280${activeSerie.backdrop_path}`;
-            tvBackdrop.style.backgroundImage = `linear-gradient(to top, #111 15%, rgba(17, 17, 17, 0.85) 100%), url(${backdropUrl})`;
-            tvBackdrop.classList.add('is-active');
-        } else {
-            tvBackdrop.style.backgroundImage = '';
-            tvBackdrop.classList.remove('is-active');
-        }
-    }
-
-    if (isTvMode || isRemoteMode) {
-        const activeSerie = (isTvMode && tvPreviewOverride) || seriesList[0];
-        if (!activeSerie) {
-            container.innerHTML = isTvMode ? `
-                <div class="tv-empty-state">
-                    <div class="tv-empty-icon">📺</div>
-                    <h2 class="tv-empty-title">Inbox Trié !</h2>
-                    <p class="tv-empty-subtitle">SéréniTV est prêt. Ajoutez ou classez des séries depuis votre mobile.</p>
-                </div>
-            ` : `
-                <div class="empty-state">
-                    Tous les titres de l'Inbox ont été classés ! 🎉
-                </div>
-            `;
-            updateRemoteDeckVisibility(0);
-            return;
-        }
-
-        const card = document.createElement('div');
-        card.className = isTvMode ? 'serie-card tv-card' : 'serie-card remote-active-card';
-        card.dataset.serieId = activeSerie.id;
-
-        const posterUrl = activeSerie.affiche_path
-            ? `https://image.tmdb.org/t/p/w500${activeSerie.affiche_path}`
-            : null;
-
-        card.innerHTML = `
-            <div class="card-poster">
-                ${posterUrl 
-                    ? `<img src="${posterUrl}" alt="Affiche de ${activeSerie.titre}" loading="eager">` 
-                    : `<div class="poster-placeholder"><span>🎬</span></div>`
-                }
-            </div>
-            <div class="card-content">
-                <div class="card-header">
-                    <h2 class="serie-title">${activeSerie.titre}</h2>
-                </div>
-                ${activeSerie.plateforme ? `<div class="serie-platform-badge">${activeSerie.plateforme}</div>` : ''}
-                <p class="serie-synopsis">${activeSerie.synopsis || 'Aucun résumé disponible.'}</p>
-                ${(() => {
-                    const playLink = getPlayLink(activeSerie);
-                    return isTvMode ? `
-                        <a href="${playLink.url}" class="btn-netflix-launch btn-launch-${playLink.class}">
-                            🍿 Lancer sur ${playLink.name}
-                        </a>
-                    ` : `
-                        <button data-watch-url="${playLink.url}" class="btn-netflix-launch btn-launch-${playLink.class}">
-                            📺 Lancer sur la Télévision
-                        </button>
-                    `;
-                })()}
-            </div>
-        `;
-
-        container.appendChild(card);
-        updateRemoteDeckVisibility(1);
-        return;
-    }
-
-    if (!seriesList || seriesList.length === 0) {
-        container.innerHTML = '<div class="empty-state">Aucune série trouvée.</div>';
-        updateRemoteDeckVisibility(0);
-        return;
-    }
-
-    seriesList.forEach(serie => {
-        const card = document.createElement('div');
-        card.className = 'serie-card';
-        card.dataset.serieId = serie.id;
-
-        const posterUrl = serie.affiche_path
-            ? `https://image.tmdb.org/t/p/w500${serie.affiche_path}`
-            : null;
-
-        card.innerHTML = `
-            <div class="card-poster">
-                ${posterUrl 
-                    ? `<img src="${posterUrl}" alt="Affiche de ${serie.titre}" loading="lazy">` 
-                    : `<div class="poster-placeholder"><span>🎬</span></div>`
-                }
-            </div>
-            <div class="card-content">
-                <div class="card-header">
-                    <h2 class="serie-title">${serie.titre}</h2>
-                </div>
-                ${serie.plateforme ? `<div class="serie-platform-badge">${serie.plateforme}</div>` : ''}
-                <p class="serie-synopsis">${serie.synopsis || 'Aucun résumé disponible.'}</p>
-                <div class="card-footer">
-                    <select
-                        class="statut-select"
-                        id="statut-${serie.id}"
-                        data-serie-id="${serie.id}"
-                        data-serie-titre="${serie.titre}"
-                        aria-label="Statut de visionnage de ${serie.titre}"
-                    >
-                        <option value="" disabled ${!serie.statut_visionnage ? 'selected' : ''}>Classer cette série…</option>
-                        ${STATUTS_VISIONNAGE.map(s => {
-                            const label = s === 'Sans intérêt' ? 'Ignorée' : (s === 'A voir' ? 'À voir' : s);
-                            return `<option value="${s}" ${serie.statut_visionnage === s ? 'selected' : ''}>${label}</option>`;
-                        }).join('')}
-                    </select>
-                </div>
-            </div>
-            <!-- Panneau des saisons (caché par défaut) -->
-            <div class="saisons-panel" id="saisons-panel-${serie.id}" hidden>
-                <div class="saisons-panel-inner" id="saisons-content-${serie.id}">
-                    <div class="saisons-loading">Chargement des saisons...</div>
-                </div>
-            </div>
-        `;
-
-        container.appendChild(card);
-    });
-
-    updateRemoteDeckVisibility(seriesList.length);
-}
-
-/**
- * Met à jour la visibilité de la télécommande sur mobile.
- */
-function updateRemoteDeckVisibility(seriesCount) {
-    const isTvMode = currentMode === 'tv';
-    const remoteDeck = document.getElementById('remote-deck');
-    if (!remoteDeck) return;
-
-    const activeNavBtn = document.querySelector('.nav-btn.active');
-    const isInboxTab = activeNavBtn && activeNavBtn.dataset.filter === 'all';
-    
-    // Si on est en mode télécommande OU (mode PC et onglet Inbox avec des séries)
-    if (currentMode === 'remote' || (currentMode === 'pc' && isInboxTab && seriesCount > 0)) {
-        remoteDeck.hidden = false;
-    } else {
-        remoteDeck.hidden = true;
-    }
-}
-
-
-

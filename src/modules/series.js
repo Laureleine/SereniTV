@@ -1,5 +1,5 @@
 import { supabase } from '../supabase.js';
-import { renderSeries, renderFetchError } from './ui.js';
+import { renderSeries, renderFetchError } from './ui/catalogRender.js';
 
 let seriesData = [];
 
