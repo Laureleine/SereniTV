@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { getPlayLink } from './ui.js';
+import { getPlayLink } from './playLink.js';
 
 describe('getPlayLink', () => {
     it('génère un deep link Netflix quand un ID est présent dans watch_url', () => {
