@@ -177,7 +177,7 @@ async function importerSuggestion(suggestion, input, suggestions, statusEl) {
         setTimeout(() => setSearchStatus(statusEl, '', ''), 3000);
     } catch (err) {
         console.error('[IMPORT]', err);
-        setSearchStatus(statusEl, 'error', `❌ ${err.message || 'Erreur d\'importation.'}`);
+        setSearchStatus(statusEl, 'error', `❌ ${err.message || 'Erreur d’importation.'}`);
     }
 }
 
