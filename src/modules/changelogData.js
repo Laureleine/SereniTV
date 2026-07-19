@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.1.2',
+        date: '2026-07-19',
+        changes: [
+            "Nettoyage automatique des Service Workers orphelins (résidus d'un ancien outil PWA) qui pouvaient servir du code périmé à certains visiteurs déjà passés sur le site.",
+        ],
+    },
+    {
         version: '1.1.1',
         date: '2026-07-19',
         changes: [
