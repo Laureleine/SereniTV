@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.1.1',
+        date: '2026-07-19',
+        changes: [
+            "Correction du Service Worker : la liste de préchargement référençait des fichiers de développement absents en production, empêchant son installation (donc tout le cache hors-ligne) depuis toujours.",
+        ],
+    },
+    {
         version: '1.1.0',
         date: '2026-07-19',
         changes: [

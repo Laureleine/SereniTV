@@ -1,12 +1,13 @@
-const CACHE_NAME = 'serenitv-cache-v2';
+const CACHE_NAME = 'serenitv-cache-v3';
+// Uniquement des chemins stables, identiques en dev et en production.
+// Les fichiers JS/CSS sont exclus : Vite les bundle sous des noms hashés
+// différents à chaque build (dist/assets/index-HASH.js), donc lister leurs
+// chemins source (/src/...) ici faisait échouer cache.addAll() en production
+// (404 sur ces chemins) et empêchait le Service Worker de s'installer.
+// Ils sont mis en cache dynamiquement par le handler "fetch" ci-dessous.
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
-  '/src/main.js',
-  '/src/supabase.js',
-  '/src/modules/ui.js',
-  '/src/modules/series.js',
-  '/src/styles/main.css',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png'
