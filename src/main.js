@@ -1,5 +1,5 @@
 import { initUI } from './modules/ui.js';
-import { fetchSeries } from './modules/series.js';
+import { fetchSeries, verifierRenouvellementSaisons } from './modules/series.js';
 
 // Enregistrement du Service Worker
 const SERVICE_WORKER_URL = new URL('/service-worker.js', location.origin).href;
@@ -38,4 +38,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (e) {
         console.error("Erreur lors du chargement initial:", e);
     }
+
+    // Revérification des séries "Suivies"/"Terminée" en tâche de fond
+    // (ne bloque pas l'affichage initial)
+    verifierRenouvellementSaisons().catch(e =>
+        console.error("Erreur lors de la vérification de renouvellement:", e)
+    );
 });

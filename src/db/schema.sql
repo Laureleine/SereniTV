@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS series CASCADE;
 
 -- 2. CRÉATION DES TYPES ÉNUMÉRÉS
 CREATE TYPE statut_production_enum AS ENUM ('En cours', 'Terminée');
-CREATE TYPE statut_visionnage_enum AS ENUM ('A voir', 'Vue', 'En cours', 'Sans intérêt', 'Abandonnée', 'Peut-être');
+CREATE TYPE statut_visionnage_enum AS ENUM ('A voir', 'Vue', 'En cours', 'Sans intérêt', 'Abandonnée', 'Peut-être', 'Terminée', 'Suivies');
 CREATE TYPE statut_saison_enum AS ENUM ('Pas commencée', 'En cours', 'Terminée');
 
 -- 3. CRÉATION DES TABLES PRINCIPALES

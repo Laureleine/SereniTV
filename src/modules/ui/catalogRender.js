@@ -2,7 +2,7 @@ import { fetchSeries } from '../series.js';
 import { getPlayLink } from './playLink.js';
 import { state } from './state.js';
 
-const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Terminée', 'Abandonnée', 'Sans intérêt', 'Peut-être'];
+const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Suivies', 'Terminée', 'Abandonnée', 'Sans intérêt', 'Peut-être'];
 
 /**
  * Affiche un état d'erreur avec bouton de reprise quand le chargement du catalogue échoue

@@ -13,7 +13,7 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
-const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Terminée', 'Abandonnée', 'Peut-être', 'Sans intérêt'];
+const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Suivies', 'Terminée', 'Abandonnée', 'Peut-être', 'Sans intérêt'];
 const STATUTS_SAISON = ['Pas commencée', 'En cours', 'Terminée'];
 
 function jsonResponse(body: unknown, status = 200) {

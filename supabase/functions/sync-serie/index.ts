@@ -132,8 +132,13 @@ Deno.serve(async (req: Request) => {
 
     const localesMap = new Map((saisonsLocales || []).map((s: any) => [s.numero_saison, s]));
 
+    // Une saison est "nouvelle" si aucune ligne locale n'existait pour ce numéro
+    // (par opposition à une simple correction du nombre d'épisodes d'une saison déjà connue).
+    let nouvelleSaisonDetectee = false;
+
     const saisonsPayload = tmdb.saisons.reduce((acc: any[], s: any) => {
       const locale = localesMap.get(s.numero_saison);
+      if (!locale) nouvelleSaisonDetectee = true;
       if (!locale || locale.nombre_episodes !== s.nombre_episodes) {
         acc.push({
           ...(locale && { id: locale.id }),
@@ -160,7 +165,7 @@ Deno.serve(async (req: Request) => {
 
     if (reloadError) throw reloadError;
 
-    return jsonResponse(serieComplete);
+    return jsonResponse({ ...serieComplete, nouvelleSaisonDetectee });
   } catch (err) {
     return jsonResponse({ error: err.message }, 500);
   }

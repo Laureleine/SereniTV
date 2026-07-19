@@ -7,6 +7,21 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.2.0',
+        date: '2026-07-19',
+        changes: [
+            "Nouvelle catégorie « Suivies » : pour les séries dont vous avez vu toutes les saisons disponibles, en attente de la suite. « En cours » redevient réservé à ce que vous regardez activement.",
+            "Bascule automatique : une série « Suivies » (ou « Terminée ») repasse toute seule en « En cours » si une nouvelle saison sort ; une série « Suivies » passe en « Terminée » si la production est confirmée définitivement close.",
+        ],
+    },
+    {
+        version: '1.1.4',
+        date: '2026-07-19',
+        changes: [
+            "Correction : le bandeau de la télécommande (NON/PEUT-ÊTRE/OUI) pouvait rester cliquable par-dessus une fenêtre de confirmation ouverte (abandon/démarrage d'une série).",
+        ],
+    },
+    {
         version: '1.1.3',
         date: '2026-07-19',
         changes: [

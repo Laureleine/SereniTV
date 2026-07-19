@@ -357,6 +357,56 @@ export async function updateStatutGlobal(serieId, statutGlobal, userId = MOCK_US
 }
 
 // ─────────────────────────────────────────────
+// RENOUVELLEMENT AUTOMATIQUE (nouvelle saison / fin de série confirmée)
+// ─────────────────────────────────────────────
+
+/**
+ * Revérifie auprès de TMDB les séries "Suivies" ou "Terminée" dont le cache
+ * date de plus de 7 jours (CACHE_TTL_MS), et bascule automatiquement leur
+ * statut :
+ *   - Nouvelle saison détectée (Suivies ou Terminée) → "En cours"
+ *   - Suivies + production confirmée terminée par TMDB → "Terminée"
+ * Conçu pour tourner une fois en tâche de fond au démarrage de l'app, sans
+ * bloquer l'affichage initial. Chaque série est traitée indépendamment :
+ * l'échec de l'une n'empêche pas les autres.
+ * @param {string} userId
+ */
+export async function verifierRenouvellementSaisons(userId = MOCK_USER_ID) {
+    const seuil = new Date(Date.now() - CACHE_TTL_MS).toISOString();
+
+    const { data: candidats, error } = await supabase
+        .from('utilisateur_series')
+        .select('serie_id, statut_visionnage, series!inner(tmdb_id, derniere_maj_tmdb)')
+        .eq('user_id', userId)
+        .in('statut_visionnage', ['Suivies', 'Terminée'])
+        .lt('series.derniere_maj_tmdb', seuil);
+
+    if (error) {
+        console.error('[RENOUVELLEMENT] Erreur recherche des candidats:', error);
+        return;
+    }
+    if (!candidats || candidats.length === 0) return;
+
+    console.log(`[RENOUVELLEMENT] ${candidats.length} série(s) à revérifier auprès de TMDB…`);
+
+    await Promise.allSettled(candidats.map(async (c) => {
+        try {
+            const tmdb = await synchroniserSerieAvecTMDB(c.series.tmdb_id);
+
+            if (tmdb.nouvelleSaisonDetectee) {
+                await updateStatutGlobal(c.serie_id, 'En cours', userId);
+                console.log(`[RENOUVELLEMENT] ✓ Nouvelle saison détectée pour serie_id=${c.serie_id} → En cours.`);
+            } else if (c.statut_visionnage === 'Suivies' && tmdb.statut_production === 'Terminée') {
+                await updateStatutGlobal(c.serie_id, 'Terminée', userId);
+                console.log(`[RENOUVELLEMENT] ✓ Série définitivement terminée pour serie_id=${c.serie_id} → Terminée.`);
+            }
+        } catch (err) {
+            console.warn(`[RENOUVELLEMENT] Échec pour tmdb_id=${c.series.tmdb_id}:`, err.message);
+        }
+    }));
+}
+
+// ─────────────────────────────────────────────
 // FILTRAGE DU CATALOGUE
 // ─────────────────────────────────────────────
 
@@ -375,6 +425,7 @@ export function applyFilters() {
     } else {
         const map = {
             'en-cours':    'En cours',
+            'suivies':     'Suivies',
             'a-voir':      'A voir',
             'terminees':   'Terminée',
             'abandonnees': 'Abandonnée',
