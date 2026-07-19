@@ -522,5 +522,5 @@ function sendPreviewSignal(series) {
         event: 'preview-series',
         payload: { series: series },
     });
-    console.log('[REALTIME] Signal de prévisualisation diffusé:', series.titre);
+    console.log('[REALTIME] Signal de prévisualisation diffusé:', series ? series.titre : 'null (clear)');
 }
