@@ -932,7 +932,7 @@ nav {
     border-radius: 24px;
     border: 1px solid var(--border);
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.1);
-    z-index: 1000;
+    z-index: 90;
     width: calc(100% - 48px);
     max-width: 420px;
     justify-content: space-around;
