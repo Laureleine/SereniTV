@@ -11,6 +11,7 @@ export const CHANGELOG = [
         date: '2026-07-20',
         changes: [
             "Nouveau menu « Trier par » sur chaque onglet : Alphabétique, Plus récent d'abord, Plus ancien d'abord ou Aléatoire. Le choix est mémorisé.",
+            "Une série ajoutée manuellement apparaît toujours en premier, quel que soit le tri choisi, le temps de la traiter.",
         ],
     },
     {

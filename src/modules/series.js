@@ -414,6 +414,16 @@ export async function verifierRenouvellementSaisons(userId = MOCK_USER_ID) {
 let currentStatusFilter = 'all';
 let currentPlatformFilter = null; // 'Netflix' ou null
 let currentSortOrder = getSavedSortOrder();
+let dernierAjoutManuelId = null;
+
+/**
+ * Épingle une série (ajoutée manuellement) en tête de liste, quel que soit le tri choisi,
+ * le temps que l'utilisateur la traite (elle quitte l'épingle dès qu'un statut lui est affecté).
+ * @param {number} id
+ */
+export function marquerAjoutManuel(id) {
+    dernierAjoutManuelId = id;
+}
 
 /**
  * Mélange Fisher-Yates : contrairement à sort((a,b) => Math.random()-0.5),
@@ -472,6 +482,14 @@ export function applyFilters() {
             }
             return a.titre.localeCompare(b.titre, 'fr');
         });
+    }
+
+    // 4. Épingle en tête le dernier ajout manuel, en tête quel que soit le tri
+    if (dernierAjoutManuelId !== null) {
+        const index = filtered.findIndex(s => s.id === dernierAjoutManuelId);
+        if (index > 0) {
+            filtered = [filtered[index], ...filtered.slice(0, index), ...filtered.slice(index + 1)];
+        }
     }
 
     renderSeries(filtered);

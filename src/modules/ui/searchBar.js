@@ -1,4 +1,4 @@
-import { rechercherSeriesTMDB, synchroniserSerieAvecTMDB, fetchSeries } from '../series.js';
+import { rechercherSeriesTMDB, synchroniserSerieAvecTMDB, fetchSeries, marquerAjoutManuel } from '../series.js';
 
 const TMDB_POSTER_THUMB = 'https://image.tmdb.org/t/p/w92';
 
@@ -170,7 +170,8 @@ async function importerSuggestion(suggestion, input, suggestions, statusEl) {
     setSearchStatus(statusEl, 'loading', `⏳ Synchronisation de « ${suggestion.titre} »…`);
 
     try {
-        await synchroniserSerieAvecTMDB(suggestion.tmdbId);
+        const serie = await synchroniserSerieAvecTMDB(suggestion.tmdbId);
+        marquerAjoutManuel(serie.id);
         setSearchStatus(statusEl, 'success', `✅ « ${suggestion.titre} » ajoutée !`);
         await fetchSeries();
         // Efface le message de succès après 3s
