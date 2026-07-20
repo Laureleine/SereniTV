@@ -416,6 +416,19 @@ let currentPlatformFilter = null; // 'Netflix' ou null
 let currentSortOrder = getSavedSortOrder();
 
 /**
+ * Mélange Fisher-Yates : contrairement à sort((a,b) => Math.random()-0.5),
+ * donne une permutation réellement équiprobable.
+ */
+function melangerAleatoirement(array) {
+    const result = [...array];
+    for (let i = result.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+}
+
+/**
  * Applique de manière combinée les filtres de statut de visionnage, de plateforme,
  * puis le tri choisi.
  */
@@ -447,22 +460,26 @@ export function applyFilters() {
     }
 
     // 3. Trier selon le mode choisi
-    filtered = [...filtered].sort((a, b) => {
-        if (currentSortOrder === 'recent') {
-            return new Date(b.created_at) - new Date(a.created_at);
-        }
-        if (currentSortOrder === 'oldest') {
-            return new Date(a.created_at) - new Date(b.created_at);
-        }
-        return a.titre.localeCompare(b.titre, 'fr');
-    });
+    if (currentSortOrder === 'random') {
+        filtered = melangerAleatoirement(filtered);
+    } else {
+        filtered = [...filtered].sort((a, b) => {
+            if (currentSortOrder === 'recent') {
+                return new Date(b.created_at) - new Date(a.created_at);
+            }
+            if (currentSortOrder === 'oldest') {
+                return new Date(a.created_at) - new Date(b.created_at);
+            }
+            return a.titre.localeCompare(b.titre, 'fr');
+        });
+    }
 
     renderSeries(filtered);
 }
 
 /**
  * Change le tri du catalogue et le mémorise pour les prochaines visites.
- * @param {'alpha'|'recent'|'oldest'} order
+ * @param {'alpha'|'recent'|'oldest'|'random'} order
  */
 export function setSortOrder(order) {
     currentSortOrder = order;

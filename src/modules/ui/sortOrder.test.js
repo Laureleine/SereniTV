@@ -38,7 +38,7 @@ describe('saveSortOrder', () => {
 });
 
 describe('SORT_ORDERS', () => {
-    it('contient les 3 tris attendus', () => {
-        expect(Object.keys(SORT_ORDERS)).toEqual(['alpha', 'recent', 'oldest']);
+    it('contient les 4 tris attendus', () => {
+        expect(Object.keys(SORT_ORDERS)).toEqual(['alpha', 'recent', 'oldest', 'random']);
     });
 });

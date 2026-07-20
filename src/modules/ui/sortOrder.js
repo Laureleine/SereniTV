@@ -7,13 +7,14 @@ export const SORT_ORDERS = {
     alpha:  'Alphabétique (A-Z)',
     recent: 'Plus récent d\'abord',
     oldest: 'Plus ancien d\'abord',
+    random: 'Aléatoire',
 };
 
 export const DEFAULT_SORT_ORDER = 'alpha';
 
 /**
  * Lit le tri mémorisé, ou l'ordre par défaut s'il est absent/invalide.
- * @returns {'alpha'|'recent'|'oldest'}
+ * @returns {'alpha'|'recent'|'oldest'|'random'}
  */
 export function getSavedSortOrder() {
     const value = localStorage.getItem(STORAGE_KEY);
@@ -22,7 +23,7 @@ export function getSavedSortOrder() {
 
 /**
  * Mémorise le tri choisi.
- * @param {'alpha'|'recent'|'oldest'} order
+ * @param {'alpha'|'recent'|'oldest'|'random'} order
  */
 export function saveSortOrder(order) {
     localStorage.setItem(STORAGE_KEY, order);

@@ -10,7 +10,7 @@ export const CHANGELOG = [
         version: '1.3.0',
         date: '2026-07-20',
         changes: [
-            "Nouveau menu « Trier par » sur chaque onglet : Alphabétique, Plus récent d'abord ou Plus ancien d'abord. Le choix est mémorisé.",
+            "Nouveau menu « Trier par » sur chaque onglet : Alphabétique, Plus récent d'abord, Plus ancien d'abord ou Aléatoire. Le choix est mémorisé.",
         ],
     },
     {
