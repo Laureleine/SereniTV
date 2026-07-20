@@ -3,6 +3,8 @@ import {
     fetchSeries,
     updateStatutGlobal,
     setPlatformFilter,
+    setSortOrder,
+    getCurrentSortOrder,
     initRealtimeZapping,
     diffuserSignalLancement,
     diffuserSignalPreview,
@@ -116,6 +118,15 @@ export function initUI() {
             setPlatformFilter(platform === 'all' ? null : platform);
         });
     });
+
+    // Tri du catalogue
+    const sortOrderSelect = document.getElementById('sort-order-select');
+    if (sortOrderSelect) {
+        sortOrderSelect.value = getCurrentSortOrder();
+        sortOrderSelect.addEventListener('change', (e) => {
+            setSortOrder(e.target.value);
+        });
+    }
 
     const container = document.getElementById('series-container');
     // Délégation d'événement unique sur le container des séries

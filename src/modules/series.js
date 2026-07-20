@@ -1,5 +1,6 @@
 import { supabase } from '../supabase.js';
 import { renderSeries, renderFetchError } from './ui/catalogRender.js';
+import { getSavedSortOrder, saveSortOrder } from './ui/sortOrder.js';
 
 let seriesData = [];
 
@@ -412,9 +413,11 @@ export async function verifierRenouvellementSaisons(userId = MOCK_USER_ID) {
 
 let currentStatusFilter = 'all';
 let currentPlatformFilter = null; // 'Netflix' ou null
+let currentSortOrder = getSavedSortOrder();
 
 /**
- * Applique de manière combinée les filtres de statut de visionnage et de plateforme.
+ * Applique de manière combinée les filtres de statut de visionnage, de plateforme,
+ * puis le tri choisi.
  */
 export function applyFilters() {
     let filtered = seriesData;
@@ -443,7 +446,32 @@ export function applyFilters() {
         filtered = filtered.filter(s => s.plateforme && s.plateforme.toLowerCase() === currentPlatformFilter.toLowerCase());
     }
 
+    // 3. Trier selon le mode choisi
+    filtered = [...filtered].sort((a, b) => {
+        if (currentSortOrder === 'recent') {
+            return new Date(b.created_at) - new Date(a.created_at);
+        }
+        if (currentSortOrder === 'oldest') {
+            return new Date(a.created_at) - new Date(b.created_at);
+        }
+        return a.titre.localeCompare(b.titre, 'fr');
+    });
+
     renderSeries(filtered);
+}
+
+/**
+ * Change le tri du catalogue et le mémorise pour les prochaines visites.
+ * @param {'alpha'|'recent'|'oldest'} order
+ */
+export function setSortOrder(order) {
+    currentSortOrder = order;
+    saveSortOrder(order);
+    applyFilters();
+}
+
+export function getCurrentSortOrder() {
+    return currentSortOrder;
 }
 
 export function filterSeries(filter) {
