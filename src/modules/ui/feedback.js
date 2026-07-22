@@ -117,21 +117,40 @@ function renderKanban() {
                 <div class="kanban-column__title">${statut} (${items.length})</div>
                 ${items.map(f => `
                     <div class="kanban-card">
-                        <span class="kanban-card__type">${escapeHtml(f.type)}</span>
+                        <div class="kanban-card__header">
+                            <span class="kanban-card__id">#${f.id}</span>
+                            <span class="kanban-card__type">${escapeHtml(f.type)}</span>
+                        </div>
                         <div class="kanban-card__titre">${escapeHtml(f.titre)}</div>
                         ${f.description ? `<div class="kanban-card__description">${escapeHtml(f.description)}</div>` : ''}
-                        ${proprietaire ? `
-                            <div class="kanban-card__actions">
-                                ${STATUTS.filter(s => s !== statut).map(s => `
-                                    <button type="button" data-move-to="${s}" data-feedback-id="${f.id}">${s}</button>
-                                `).join('')}
-                            </div>
-                        ` : ''}
+                        <div class="kanban-card__actions">
+                            <button type="button" class="kanban-card__copy" data-copy-id="${f.id}">Copier</button>
+                            ${proprietaire ? STATUTS.filter(s => s !== statut).map(s => `
+                                <button type="button" data-move-to="${s}" data-feedback-id="${f.id}">${s}</button>
+                            `).join('') : ''}
+                        </div>
                     </div>
                 `).join('')}
             </div>
         `;
     }).join('');
+
+    board.querySelectorAll('[data-copy-id]').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const feedbackId = parseInt(btn.dataset.copyId);
+            const f = allFeedback.find(item => item.id === feedbackId);
+            if (!f) return;
+            const texte = `#${f.id} — ${f.type}\nTitre : ${f.titre}\nDescription : ${f.description || '(aucune)'}\nStatut : ${f.statut}`;
+            try {
+                await navigator.clipboard.writeText(texte);
+                const original = btn.textContent;
+                btn.textContent = 'Copié !';
+                setTimeout(() => { btn.textContent = original; }, 1500);
+            } catch (err) {
+                console.error('[FEEDBACK] Erreur copie presse-papiers:', err);
+            }
+        });
+    });
 
     if (proprietaire) {
         board.querySelectorAll('[data-move-to]').forEach(btn => {

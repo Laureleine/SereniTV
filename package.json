@@ -1,6 +1,6 @@
 {
   "name": "serenitv",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "Suivi complet de vos séries et saisons par thème",
   "type": "module",
   "scripts": {

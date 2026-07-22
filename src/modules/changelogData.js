@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.5',
+        date: '2026-07-22',
+        changes: [
+            "Chaque carte du Kanban Feedback affiche désormais son identifiant, et un bouton « Copier » permet de copier son contenu en un clic.",
+        ],
+    },
+    {
         version: '1.6.4',
         date: '2026-07-22',
         changes: [
