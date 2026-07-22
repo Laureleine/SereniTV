@@ -86,6 +86,9 @@ export async function initAuth(onAuthenticated) {
     document.getElementById('landing-nav-signup')?.addEventListener('click', () => showAuthOverlay('signup'));
     document.getElementById('landing-cta-signup')?.addEventListener('click', () => showAuthOverlay('signup'));
     document.getElementById('landing-nav-changelog')?.addEventListener('click', () => ouvrirChangelog());
+    document.getElementById('landing-nav-faq')?.addEventListener('click', () => {
+        document.getElementById('landing-faq')?.scrollIntoView({ behavior: 'smooth' });
+    });
 
     toggleBtn?.addEventListener('click', () => setMode(mode === 'login' ? 'signup' : 'login'));
 

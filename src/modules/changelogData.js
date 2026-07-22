@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.1',
+        date: '2026-07-22',
+        changes: [
+            "Ajout d'une FAQ sur la page d'accueil, expliquant qu'une connexion est nécessaire sur chaque appareil (mémorisée ensuite).",
+        ],
+    },
+    {
         version: '1.6.0',
         date: '2026-07-22',
         changes: [
