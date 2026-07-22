@@ -137,6 +137,16 @@ export function renderSeries(seriesList) {
                 </div>
                 ${serie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(serie.plateforme)}</div>` : ''}
                 <p class="serie-synopsis">${escapeHtml(serie.synopsis) || 'Aucun résumé disponible.'}</p>
+                <div class="serie-themes" data-serie-id="${serie.id}">
+                    ${(serie.themes || []).map(t => `
+                        <span class="theme-chip" data-theme-id="${t.id}">
+                            ${escapeHtml(t.nom_theme)}
+                            <button type="button" class="theme-chip__remove" data-theme-id="${t.id}" aria-label="Retirer le thème ${escapeHtml(t.nom_theme)}">×</button>
+                        </span>
+                    `).join('')}
+                    <button type="button" class="theme-chip theme-chip--add" data-action="add-theme">+ Thème</button>
+                    <input type="text" class="theme-add-input" list="theme-suggestions" placeholder="Nom du thème…" hidden>
+                </div>
                 <div class="card-footer">
                     <select
                         class="statut-select"

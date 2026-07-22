@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.5.0',
+        date: '2026-07-22',
+        changes: [
+            "Nouveau : classement par thèmes. Chaque série récupère automatiquement ses genres depuis TMDB, et vous pouvez en ajouter ou en retirer à la main sur chaque carte. Une rangée de filtres par thème permet d'afficher uniquement les séries correspondantes.",
+        ],
+    },
+    {
         version: '1.4.2',
         date: '2026-07-22',
         changes: [

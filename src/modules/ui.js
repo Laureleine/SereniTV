@@ -19,6 +19,7 @@ import { initSearchBar } from './ui/searchBar.js';
 import { getSavedMode, saveMode, clearSavedMode } from './ui/deviceMode.js';
 import { initChangelogBadge } from './ui/changelog.js';
 import { showToast } from './ui/toast.js';
+import { initThemeFilter } from './ui/themeFilter.js';
 
 // ─────────────────────────────────────────────
 // INITIALISATION
@@ -143,8 +144,9 @@ export function initUI() {
     container.addEventListener('click', (e) => {
         if (state.currentMode === 'tv' || state.currentMode === 'remote') return;
         
-        // Ignorer si on clique sur un select, un bouton ou le panneau de saisons déjà ouvert
-        if (e.target.closest('select') || e.target.closest('button') || e.target.closest('.saisons-panel')) {
+        // Ignorer si on clique sur un select, un bouton, le panneau de saisons déjà ouvert,
+        // ou la zone des thèmes (ajout/retrait)
+        if (e.target.closest('select') || e.target.closest('button') || e.target.closest('.saisons-panel') || e.target.closest('.serie-themes')) {
             return;
         }
 
@@ -159,7 +161,7 @@ export function initUI() {
         if (state.currentMode === 'tv' || state.currentMode === 'remote') return;
         if (e.key !== 'Enter' && e.key !== ' ') return;
 
-        if (e.target.closest('select') || e.target.closest('button') || e.target.closest('.saisons-panel')) {
+        if (e.target.closest('select') || e.target.closest('button') || e.target.closest('.saisons-panel') || e.target.closest('.serie-themes')) {
             return;
         }
 
@@ -251,4 +253,7 @@ export function initUI() {
 
     // Badge de version + notes de version
     initChangelogBadge();
+
+    // Filtre par thème + gestion des thèmes sur les cartes
+    initThemeFilter();
 }

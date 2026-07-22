@@ -57,6 +57,10 @@ export async function fetchSeries() {
                 utilisateur_series (
                     user_id,
                     statut_visionnage
+                ),
+                series_themes (
+                    theme_id,
+                    themes ( id, nom_theme )
                 )
             `)
             .order('titre');
@@ -69,6 +73,7 @@ export async function fetchSeries() {
             return {
                 ...s,
                 statut_visionnage: userStatus ? userStatus.statut_visionnage : null,
+                themes: (s.series_themes || []).map(st => st.themes).filter(Boolean),
             };
         });
 
@@ -370,6 +375,7 @@ export async function verifierRenouvellementSaisons(userId = getCurrentUserId())
 
 let currentStatusFilter = 'all';
 let currentPlatformFilter = null; // 'Netflix' ou null
+let currentThemeFilter = []; // tableau d'ids de thèmes, vide = pas de filtre (logique OU)
 let currentSortOrder = getSavedSortOrder();
 let dernierAjoutManuelId = null;
 
@@ -426,6 +432,11 @@ export function applyFilters() {
         filtered = filtered.filter(s => s.plateforme && s.plateforme.toLowerCase() === currentPlatformFilter.toLowerCase());
     }
 
+    // 2bis. Filtrer par thème si sélectionné (logique OU : au moins un des thèmes cochés)
+    if (currentThemeFilter.length > 0) {
+        filtered = filtered.filter(s => (s.themes || []).some(t => currentThemeFilter.includes(t.id)));
+    }
+
     // 3. Trier selon le mode choisi
     if (currentSortOrder === 'random') {
         filtered = melangerAleatoirement(filtered);
@@ -478,6 +489,73 @@ export function filterSeries(filter) {
 export function setPlatformFilter(platform) {
     currentPlatformFilter = platform;
     applyFilters();
+}
+
+/**
+ * Coche/décoche un thème dans le filtre (logique OU entre les thèmes cochés).
+ * @param {number} themeId
+ */
+export function toggleThemeFilter(themeId) {
+    if (currentThemeFilter.includes(themeId)) {
+        currentThemeFilter = currentThemeFilter.filter(id => id !== themeId);
+    } else {
+        currentThemeFilter = [...currentThemeFilter, themeId];
+    }
+    applyFilters();
+}
+
+export function getCurrentThemeFilter() {
+    return currentThemeFilter;
+}
+
+/**
+ * Liste tous les thèmes existants (catalogue), triés par nom — pour la
+ * rangée de filtres et l'autocomplétion d'ajout.
+ * @returns {Promise<Array<{id: number, nom_theme: string}>>}
+ */
+export async function fetchAllThemes() {
+    const { data, error } = await supabase
+        .from('themes')
+        .select('id, nom_theme')
+        .order('nom_theme');
+
+    if (error) {
+        console.error('[THEMES] Erreur fetchAllThemes:', error);
+        return [];
+    }
+    return data || [];
+}
+
+/**
+ * Ajoute (ou crée si nouveau) un thème sur une série.
+ * @param {number} serieId
+ * @param {string} nomTheme
+ * @returns {Promise<{success: boolean, error?: any}>}
+ */
+export async function ajouterThemeSerie(serieId, nomTheme) {
+    try {
+        await callEdgeFunction('manage-themes', { action: 'add_theme', serieId, nomTheme });
+        return { success: true };
+    } catch (error) {
+        console.error('[THEMES] Erreur ajouterThemeSerie:', error);
+        return { success: false, error };
+    }
+}
+
+/**
+ * Retire un thème d'une série.
+ * @param {number} serieId
+ * @param {number} themeId
+ * @returns {Promise<{success: boolean, error?: any}>}
+ */
+export async function retirerThemeSerie(serieId, themeId) {
+    try {
+        await callEdgeFunction('manage-themes', { action: 'remove_theme', serieId, themeId });
+        return { success: true };
+    } catch (error) {
+        console.error('[THEMES] Erreur retirerThemeSerie:', error);
+        return { success: false, error };
+    }
 }
 
 export let zappingChannel = null;

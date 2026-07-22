@@ -906,6 +906,104 @@ nav {
     border-color: var(--neon-blue);
 }
 
+/* ── Filtre par thème ── */
+.theme-filter-row {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.theme-filter-chip {
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.theme-filter-chip:hover {
+    border-color: var(--electric-purp);
+    color: var(--text);
+}
+
+.theme-filter-chip.is-active {
+    background: var(--surface);
+    color: var(--text);
+    border-color: var(--electric-purp);
+    box-shadow: 0 0 10px rgba(168, 85, 247, 0.15);
+}
+
+/* ── Thèmes sur une carte série ── */
+.serie-themes {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 8px;
+}
+
+.theme-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface-2);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+}
+
+.theme-chip__remove {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+    padding: 0;
+}
+
+.theme-chip__remove:hover {
+    color: var(--danger);
+}
+
+.theme-chip--add {
+    cursor: pointer;
+    border-style: dashed;
+}
+
+.theme-chip--add:hover {
+    border-color: var(--electric-purp);
+    color: var(--text);
+}
+
+.theme-add-input {
+    background: var(--surface);
+    border: 1px solid var(--electric-purp);
+    border-radius: 999px;
+    color: var(--text);
+    font-size: 0.75rem;
+    padding: 3px 10px;
+    width: 140px;
+}
+
+.theme-add-input:focus {
+    outline: none;
+}
+
+.is-tv-mode .theme-filter-row,
+.is-remote-mode .theme-filter-row {
+    display: none !important;
+}
+
 .platform-btn {
     background: var(--surface-2);
     color: var(--text-muted);

@@ -13,8 +13,8 @@
 --     (service_role), qui dérive elle-même le user_id du JWT vérifié (jamais
 --     du corps de la requête).
 --
---   Les 3 Edge Functions (tmdb-search, sync-serie, update-user-status)
---   vérifient chacune le JWT de la requête auprès de Supabase Auth avant
+--   Les 4 Edge Functions (tmdb-search, sync-serie, update-user-status,
+--   manage-themes) vérifient chacune le JWT de la requête auprès de Supabase Auth avant
 --   toute action — il n'existe plus de secret partagé côté client (un secret
 --   envoyé par le navigateur est par nature toujours extractible du bundle JS,
 --   donc jamais réellement secret).

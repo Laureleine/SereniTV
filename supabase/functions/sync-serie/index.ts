@@ -95,6 +95,7 @@ async function fetchTMDB(tmdbId: number) {
         numero_saison: s.season_number,
         nombre_episodes: s.episode_count,
       })),
+    genres: (d.genres || []).map((g: any) => g.name).filter(Boolean),
   };
 }
 
@@ -171,9 +172,31 @@ Deno.serve(async (req: Request) => {
       if (saisonsError) throw saisonsError;
     }
 
+    // Thèmes (genres TMDB) : purement additif, ne retire jamais un thème déjà
+    // lié (ex : ajouté ou affiné à la main) même si TMDB ne le renvoie plus.
+    if (tmdb.genres.length > 0) {
+      await supabase
+        .from('themes')
+        .upsert(tmdb.genres.map((nom: string) => ({ nom_theme: nom })), { onConflict: 'nom_theme', ignoreDuplicates: true });
+
+      const { data: themeRows } = await supabase
+        .from('themes')
+        .select('id')
+        .in('nom_theme', tmdb.genres);
+
+      if (themeRows && themeRows.length > 0) {
+        await supabase
+          .from('series_themes')
+          .upsert(
+            themeRows.map((t: any) => ({ serie_id: serieId, theme_id: t.id })),
+            { onConflict: 'serie_id, theme_id', ignoreDuplicates: true }
+          );
+      }
+    }
+
     const { data: serieComplete, error: reloadError } = await supabase
       .from('series')
-      .select('*, saisons (*)')
+      .select('*, saisons (*), series_themes (theme_id, themes (id, nom_theme))')
       .eq('id', serieId)
       .single();
 
