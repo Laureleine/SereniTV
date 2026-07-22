@@ -83,7 +83,7 @@ export function initFeedback() {
 async function ouvrirFeedback() {
     const overlay = document.getElementById('feedback-overlay');
     overlay.classList.remove('hidden');
-    releaseFocusFeedback = trapFocus(overlay.querySelector('.portal-card'), fermerFeedback);
+    releaseFocusFeedback = trapFocus(overlay, fermerFeedback);
     await rechargerFeedback();
 }
 

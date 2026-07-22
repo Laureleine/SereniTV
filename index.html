@@ -120,9 +120,13 @@
         </div>
     </div>
 
-    <!-- ── Vue Feedback (Kanban) ── -->
-    <div id="feedback-overlay" class="portal portal-overlay portal-overlay--wide hidden">
-        <div class="portal-card portal-card--wide">
+    <!-- ── Vue Feedback (Kanban), page pleine largeur ── -->
+    <div id="feedback-overlay" class="portal portal-fullpage hidden">
+        <nav class="portal-nav">
+            <span class="portal-nav__brand">✦ SéréniTV — Feedback</span>
+            <button id="feedback-fermer" class="portal-nav__link">← Retour à l'appli</button>
+        </nav>
+        <div class="feedback-page">
             <div class="feedback-header">
                 <h2 class="portal-card__title">Feedback</h2>
                 <button id="feedback-nouvelle-demande" class="btn portal-btn">Nouvelle demande</button>
@@ -136,7 +140,7 @@
             <div class="kanban-board" id="kanban-board"></div>
 
             <!-- Formulaire "Nouvelle demande" -->
-            <div id="feedback-form-wrap" class="feedback-form-wrap" hidden>
+            <div id="feedback-form-wrap" class="feedback-form-wrap portal-card" hidden>
                 <form id="feedback-form" class="auth-form">
                     <label class="portal-label" for="feedback-type">Type</label>
                     <select id="feedback-type" class="auth-input">
@@ -154,8 +158,6 @@
                     </div>
                 </form>
             </div>
-
-            <button id="feedback-fermer" class="btn btn--ghost feedback-close">Fermer</button>
         </div>
     </div>
 

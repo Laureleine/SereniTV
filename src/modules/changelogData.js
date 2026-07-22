@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.4',
+        date: '2026-07-22',
+        changes: [
+            "Le Kanban Feedback passe en page pleine largeur (au lieu d'une petite fenêtre), pour un affichage plus lisible.",
+        ],
+    },
+    {
         version: '1.6.3',
         date: '2026-07-22',
         changes: [
