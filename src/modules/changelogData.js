@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.7',
+        date: '2026-07-22',
+        changes: [
+            "Correction : le panneau des saisons d'une série avec beaucoup de saisons (ex : 1 Rue Sesame, 56 saisons) rendait la page très longue à parcourir pour atteindre les séries suivantes. Il défile maintenant sur lui-même, sans pousser le reste de la page.",
+        ],
+    },
+    {
         version: '1.6.6',
         date: '2026-07-22',
         changes: [
