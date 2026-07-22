@@ -18,13 +18,20 @@ envContent.split('\n').forEach(line => {
 const SUPABASE_URL = env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
 const TMDB_ACCESS_TOKEN = env.TMDB_ACCESS_TOKEN;
+const SERENITV_AUTH_EMAIL = env.SERENITV_AUTH_EMAIL;
+const SERENITV_AUTH_PASSWORD = env.SERENITV_AUTH_PASSWORD;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !TMDB_ACCESS_TOKEN) {
     console.error('❌ Variables d\'environnement manquantes dans le fichier .env !');
     process.exit(1);
 }
+if (!SERENITV_AUTH_EMAIL || !SERENITV_AUTH_PASSWORD) {
+    console.error('❌ SERENITV_AUTH_EMAIL / SERENITV_AUTH_PASSWORD manquants dans .env (nécessaires pour appeler les Edge Functions) !');
+    process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const EDGE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_HEADERS = {
@@ -36,13 +43,34 @@ async function wait(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-function mapperStatutTMDB(tmdbStatus) {
-    return (tmdbStatus === 'Ended' || tmdbStatus === 'Canceled') ? 'Terminée' : 'En cours';
+async function callEdgeFunction(name, payload, accessToken) {
+    const response = await fetch(`${EDGE_FUNCTIONS_URL}/${name}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `Erreur ${name} (HTTP ${response.status})`);
+    return data;
 }
 
 async function run() {
     try {
-        console.log('🎬 Démarrage du scan TMDB Discover pour Netflix (reseau ID 213)...');
+        console.log('🔐 Connexion au compte SéréniTV...');
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: SERENITV_AUTH_EMAIL,
+            password: SERENITV_AUTH_PASSWORD,
+        });
+        if (authError || !authData.session) {
+            throw new Error(`Échec de connexion : ${authError?.message || 'session absente'}`);
+        }
+        const accessToken = authData.session.access_token;
+        console.log('✅ Connecté.');
+
+        console.log('🎬 Démarrage du scan TMDB Discover pour Netflix (réseau ID 213)...');
         const showIds = [];
 
         // 1. Récupérer les séries sur 5 pages
@@ -51,89 +79,32 @@ async function run() {
             const url = `${TMDB_BASE_URL}/discover/tv?with_networks=213&sort_by=popularity.desc&language=fr-FR&page=${page}`;
             const res = await fetch(url, { headers: TMDB_HEADERS });
             if (!res.ok) throw new Error(`Discover API error page ${page}: ${res.status}`);
-            
+
             const data = await res.json();
-            const results = data.results || [];
-            results.forEach(show => {
+            (data.results || []).forEach(show => {
                 if (show.id) showIds.push(show.id);
             });
         }
 
         console.log(`✅ Scan terminé. ${showIds.length} séries trouvées.`);
-        console.log(`📡 Récupération des détails (watch_url, backdrop_path) avec un débit régulé...`);
+        console.log(`🚀 Synchronisation via sync-serie (une requête par série, débit régulé)...`);
 
-        const seriesPayload = [];
-        
-        // Concurrence régulée : paquets de 10 requêtes simultanées
-        const chunkSize = 10;
-        for (let i = 0; i < showIds.length; i += chunkSize) {
-            const chunk = showIds.slice(i, i + chunkSize);
-            console.log(`⏳ Chargement des détails pour les séries ${i + 1} à ${Math.min(i + chunkSize, showIds.length)}...`);
-            
-            const promises = chunk.map(async (id) => {
-                try {
-                    const detailUrl = `${TMDB_BASE_URL}/tv/${id}?language=fr-FR&append_to_response=watch/providers`;
-                    const res = await fetch(detailUrl, { headers: TMDB_HEADERS });
-                    if (!res.ok) {
-                        console.warn(`⚠️ Échec de chargement des détails pour tmdb_id=${id}`);
-                        return null;
-                    }
-                    const d = await res.json();
-                    
-                    // Extraire watch_url
-                    const providers = d["watch/providers"]?.results?.FR;
-                    const hasNetflix = providers && (providers.flatrate || []).some(
-                        p => p.provider_name && p.provider_name.toLowerCase().includes('netflix')
-                    );
-                    const watchUrl = hasNetflix ? (providers.link || null) : null;
-
-                    return {
-                        tmdb_id:           id,
-                        titre:             d.name,
-                        synopsis:          d.overview || d.original_name || '',
-                        affiche_path:      d.poster_path || null,
-                        backdrop_path:     d.backdrop_path || null,
-                        statut_production: mapperStatutTMDB(d.status),
-                        plateforme:        'Netflix',
-                        watch_url:         watchUrl,
-                    };
-                } catch (err) {
-                    console.error(`❌ Erreur lors du traitement de la série ${id}:`, err.message);
-                    return null;
-                }
-            });
-
-            const results = await Promise.all(promises);
-            results.forEach(item => {
-                if (item) seriesPayload.push(item);
-            });
-
-            // Petit délai pour ne pas saturer l'API
-            await wait(100);
-        }
-
-        console.log(`🚀 Injection en masse de ${seriesPayload.length} séries dans Supabase (table series)...`);
-
-        // Upsert par lots de 50 séries pour Supabase
-        const dbChunkSize = 50;
-        let insertedCount = 0;
-        
-        for (let i = 0; i < seriesPayload.length; i += dbChunkSize) {
-            const batch = seriesPayload.slice(i, i + dbChunkSize);
-            const { data, error } = await supabase
-                .from('series')
-                .upsert(batch, { onConflict: 'tmdb_id' })
-                .select('id');
-
-            if (error) {
-                console.error(`❌ Erreur d'upsert pour le lot ${i + 1}-${i + dbChunkSize}:`, error);
-            } else {
-                insertedCount += (data || []).length;
-                console.log(`   └─ Lot d'upsert réussi (${(data || []).length} lignes traitées).`);
+        // 2. Synchroniser chaque série via l'Edge Function sync-serie, qui se charge
+        // elle-même de récupérer les détails TMDB et d'upserter series/saisons/thèmes.
+        let syncedCount = 0;
+        for (let i = 0; i < showIds.length; i++) {
+            const id = showIds[i];
+            try {
+                await callEdgeFunction('sync-serie', { tmdbId: id }, accessToken);
+                syncedCount++;
+                console.log(`   [${i + 1}/${showIds.length}] ✅ tmdb_id=${id} synchronisé.`);
+            } catch (err) {
+                console.warn(`   [${i + 1}/${showIds.length}] ⚠️ Échec pour tmdb_id=${id} :`, err.message);
             }
+            await wait(150); // anti rate-limit (TMDB + Edge Function)
         }
 
-        console.log(`\n🎉 FIN DU PEUPLEMENT ! ${insertedCount} séries ont été importées ou mises à jour avec succès dans Supabase.`);
+        console.log(`\n🎉 FIN DU PEUPLEMENT ! ${syncedCount}/${showIds.length} séries synchronisées avec succès.`);
         process.exit(0);
 
     } catch (err) {

@@ -18,15 +18,20 @@ envContent.split('\n').forEach(line => {
 const SUPABASE_URL = env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY;
 const TMDB_ACCESS_TOKEN = env.TMDB_ACCESS_TOKEN;
-const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001'; // Notre ID utilisateur mocké
+const SERENITV_AUTH_EMAIL = env.SERENITV_AUTH_EMAIL;
+const SERENITV_AUTH_PASSWORD = env.SERENITV_AUTH_PASSWORD;
 
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !TMDB_ACCESS_TOKEN) {
     console.error('❌ Variables d\'environnement manquantes dans le fichier .env !');
     process.exit(1);
 }
+if (!SERENITV_AUTH_EMAIL || !SERENITV_AUTH_PASSWORD) {
+    console.error('❌ SERENITV_AUTH_EMAIL / SERENITV_AUTH_PASSWORD manquants dans .env (nécessaires pour appeler les Edge Functions) !');
+    process.exit(1);
+}
 
-// Initialiser le client Supabase
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const EDGE_FUNCTIONS_URL = `${SUPABASE_URL}/functions/v1`;
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_HEADERS = {
@@ -41,6 +46,20 @@ if (!BASE_PATH) {
     console.error('❌ Veuillez fournir le chemin absolu du dossier à scanner en paramètre.');
     console.error('Usage: node scratch/sync-local-folders.js "C:\\chemin\\vers\\series"');
     process.exit(1);
+}
+
+async function callEdgeFunction(name, payload, accessToken) {
+    const response = await fetch(`${EDGE_FUNCTIONS_URL}/${name}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || `Erreur ${name} (HTTP ${response.status})`);
+    return data;
 }
 
 function cleanFolderTitle(folderName) {
@@ -71,37 +90,19 @@ async function searchTVShow(title) {
     }
 }
 
-async function fetchTVShowDetails(id) {
-    try {
-        const url = `${TMDB_BASE_URL}/tv/${id}?language=fr-FR&append_to_response=watch/providers`;
-        const res = await fetch(url, { headers: TMDB_HEADERS });
-        if (!res.ok) return null;
-        const d = await res.json();
-        
-        // Récupérer watch_url Netflix
-        const providers = d["watch/providers"]?.results?.FR;
-        const hasNetflix = providers && (providers.flatrate || []).some(
-            p => p.provider_name && p.provider_name.toLowerCase().includes('netflix')
-        );
-        const watchUrl = hasNetflix ? (providers.link || null) : null;
-
-        return {
-            tmdb_id:           id,
-            titre:             d.name,
-            synopsis:          d.overview || d.original_name || '',
-            affiche_path:      d.poster_path || null,
-            backdrop_path:     d.backdrop_path || null,
-            statut_production: (d.status === 'Ended' || d.status === 'Canceled') ? 'Terminée' : 'En cours',
-            plateforme:        d.networks?.[0]?.name || null,
-            watch_url:         watchUrl,
-        };
-    } catch (e) {
-        return null;
-    }
-}
-
 async function run() {
     try {
+        console.log('🔐 Connexion au compte SéréniTV...');
+        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+            email: SERENITV_AUTH_EMAIL,
+            password: SERENITV_AUTH_PASSWORD,
+        });
+        if (authError || !authData.session) {
+            throw new Error(`Échec de connexion : ${authError?.message || 'session absente'}`);
+        }
+        const accessToken = authData.session.access_token;
+        console.log('✅ Connecté.');
+
         const absolutePath = path.resolve(BASE_PATH);
         if (!fs.existsSync(absolutePath)) {
             console.error(`❌ Le répertoire spécifié n'existe pas : ${absolutePath}`);
@@ -113,63 +114,40 @@ async function run() {
         const jobs = [];
 
         // 1. Lister les dossiers racine pour "En cours" (hors dossiers de catégories)
-        if (fs.existsSync(absolutePath)) {
-            const rootEntries = fs.readdirSync(absolutePath, { withFileTypes: true });
-            rootEntries.forEach(entry => {
-                if (entry.isDirectory()) {
-                    const name = entry.name;
-                    // Exclure les dossiers de catégories
-                    if (name.toLowerCase() !== 'séries terminées' && 
-                        name.toLowerCase() !== 'series terminees' && 
-                        name.toLowerCase() !== 'séries bof' && 
-                        name.toLowerCase() !== 'series bof') {
-                        jobs.push({ folderName: name, status: 'En cours', path: path.join(absolutePath, name) });
-                    }
+        const rootEntries = fs.readdirSync(absolutePath, { withFileTypes: true });
+        rootEntries.forEach(entry => {
+            if (entry.isDirectory()) {
+                const name = entry.name;
+                // Exclure les dossiers de catégories
+                if (name.toLowerCase() !== 'séries terminées' &&
+                    name.toLowerCase() !== 'series terminees' &&
+                    name.toLowerCase() !== 'séries bof' &&
+                    name.toLowerCase() !== 'series bof') {
+                    jobs.push({ folderName: name, status: 'En cours' });
                 }
-            });
-        }
+            }
+        });
 
         // 2. Lister le dossier "Séries Terminées" pour "Terminée"
         const termineesPath = path.join(absolutePath, 'Séries Terminées');
-        if (fs.existsSync(termineesPath)) {
-            const entries = fs.readdirSync(termineesPath, { withFileTypes: true });
-            entries.forEach(entry => {
-                if (entry.isDirectory()) {
-                    jobs.push({ folderName: entry.name, status: 'Terminée', path: path.join(termineesPath, entry.name) });
-                }
+        const termineesPathNoAccent = path.join(absolutePath, 'Series Terminees');
+        const termineesDir = fs.existsSync(termineesPath) ? termineesPath
+            : (fs.existsSync(termineesPathNoAccent) ? termineesPathNoAccent : null);
+        if (termineesDir) {
+            fs.readdirSync(termineesDir, { withFileTypes: true }).forEach(entry => {
+                if (entry.isDirectory()) jobs.push({ folderName: entry.name, status: 'Terminée' });
             });
-        } else {
-            // Test avec orthographe alternative sans accent
-            const termineesPathNoAccent = path.join(absolutePath, 'Series Terminees');
-            if (fs.existsSync(termineesPathNoAccent)) {
-                const entries = fs.readdirSync(termineesPathNoAccent, { withFileTypes: true });
-                entries.forEach(entry => {
-                    if (entry.isDirectory()) {
-                        jobs.push({ folderName: entry.name, status: 'Terminée', path: path.join(termineesPathNoAccent, entry.name) });
-                    }
-                });
-            }
         }
 
         // 3. Lister le dossier "Séries Bof" pour "Abandonnée"
         const bofPath = path.join(absolutePath, 'Séries Bof');
-        if (fs.existsSync(bofPath)) {
-            const entries = fs.readdirSync(bofPath, { withFileTypes: true });
-            entries.forEach(entry => {
-                if (entry.isDirectory()) {
-                    jobs.push({ folderName: entry.name, status: 'Abandonnée', path: path.join(bofPath, entry.name) });
-                }
+        const bofPathNoAccent = path.join(absolutePath, 'Series Bof');
+        const bofDir = fs.existsSync(bofPath) ? bofPath
+            : (fs.existsSync(bofPathNoAccent) ? bofPathNoAccent : null);
+        if (bofDir) {
+            fs.readdirSync(bofDir, { withFileTypes: true }).forEach(entry => {
+                if (entry.isDirectory()) jobs.push({ folderName: entry.name, status: 'Abandonnée' });
             });
-        } else {
-            const bofPathNoAccent = path.join(absolutePath, 'Series Bof');
-            if (fs.existsSync(bofPathNoAccent)) {
-                const entries = fs.readdirSync(bofPathNoAccent, { withFileTypes: true });
-                entries.forEach(entry => {
-                    if (entry.isDirectory()) {
-                        jobs.push({ folderName: entry.name, status: 'Abandonnée', path: path.join(bofPathNoAccent, entry.name) });
-                    }
-                });
-            }
         }
 
         console.log(`📋 Total de séries à synchroniser détectées : ${jobs.length}`);
@@ -179,7 +157,7 @@ async function run() {
         for (let i = 0; i < jobs.length; i++) {
             const job = jobs[i];
             const cleanTitle = cleanFolderTitle(job.folderName);
-            console.log(`\n[${i+1}/${jobs.length}] ⚙️ Traitement de : "${job.folderName}"`);
+            console.log(`\n[${i + 1}/${jobs.length}] ⚙️ Traitement de : "${job.folderName}"`);
             console.log(`   👉 Titre nettoyé : "${cleanTitle}" | Statut cible : [${job.status}]`);
 
             console.log(`   🔎 Recherche TMDB...`);
@@ -189,41 +167,21 @@ async function run() {
                 continue;
             }
 
-            const details = await fetchTVShowDetails(tmdbId);
-            if (!details) {
-                console.warn(`   ❌ Échec de récupération des détails pour tmdb_id=${tmdbId}`);
-                continue;
-            }
+            try {
+                // 1. Synchroniser la série (récupère les détails TMDB, upsert series/saisons/thèmes)
+                const serie = await callEdgeFunction('sync-serie', { tmdbId }, accessToken);
 
-            // 1. Enregistrer les métadonnées de la série
-            const { data: serieData, error: serieError } = await supabase
-                .from('series')
-                .upsert(details, { onConflict: 'tmdb_id' })
-                .select('id')
-                .single();
+                // 2. Associer le statut utilisateur correspondant (En cours, Terminée, Abandonnée)
+                await callEdgeFunction('update-user-status', {
+                    action: 'update_statut_global',
+                    serieId: serie.id,
+                    statut: job.status,
+                }, accessToken);
 
-            if (serieError || !serieData) {
-                console.error(`   ❌ Échec d'enregistrement de la série :`, serieError);
-                continue;
-            }
-
-            const dbId = serieData.id;
-
-            // 2. Lier le statut utilisateur correspondant (En cours, Terminée, Abandonnée)
-            const { error: userError } = await supabase
-                .from('utilisateur_series')
-                .upsert({
-                    user_id: MOCK_USER_ID,
-                    serie_id: dbId,
-                    statut_visionnage: job.status,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id, serie_id' });
-
-            if (userError) {
-                console.error(`   ❌ Échec d'association du statut utilisateur :`, userError);
-            } else {
-                console.log(`   ✅ Synchronisée : "${details.titre}" → Statut : [${job.status}]`);
+                console.log(`   ✅ Synchronisée : "${serie.titre}" → Statut : [${job.status}]`);
                 syncSuccessCount++;
+            } catch (err) {
+                console.error(`   ❌ Échec de synchronisation :`, err.message);
             }
 
             // Délai de précaution anti rate-limit
