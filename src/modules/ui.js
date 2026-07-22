@@ -11,7 +11,7 @@ import {
     getCurrentUserId,
 } from './series.js';
 import { state } from './ui/state.js';
-import { renderSeries } from './ui/catalogRender.js';
+import { renderSeries, updateRemoteDeckVisibility } from './ui/catalogRender.js';
 import { toggleSaisonsPanel } from './ui/saisonsPanel.js';
 import { fermerModal, onConfirmerModal } from './ui/modal.js';
 import { onStatutChange, onSaisonStatutChange } from './ui/statusHandlers.js';
@@ -230,6 +230,24 @@ export function initUI() {
             const id = parseInt(firstCard.dataset.serieId);
             // OUI = En cours (avec prévisualisation cinéma sur la télé)
             optimisteTriage(id, 'En cours', true);
+        });
+    }
+
+    // Masquer/réafficher la fenêtre Oui/Non/Peut-être (mode PC uniquement)
+    const btnHideDeck = document.getElementById('remote-deck-hide');
+    const btnShowDeck = document.getElementById('remote-deck-show');
+
+    if (btnHideDeck) {
+        btnHideDeck.addEventListener('click', () => {
+            state.remoteDeckHiddenByUser = true;
+            updateRemoteDeckVisibility(state.dernierRenduSeries.length);
+        });
+    }
+
+    if (btnShowDeck) {
+        btnShowDeck.addEventListener('click', () => {
+            state.remoteDeckHiddenByUser = false;
+            updateRemoteDeckVisibility(state.dernierRenduSeries.length);
         });
     }
 

@@ -182,17 +182,21 @@ export function renderSeries(seriesList) {
 /**
  * Met à jour la visibilité de la télécommande sur mobile.
  */
-function updateRemoteDeckVisibility(seriesCount) {
+export function updateRemoteDeckVisibility(seriesCount) {
     const remoteDeck = document.getElementById('remote-deck');
+    const showBtn = document.getElementById('remote-deck-show');
     if (!remoteDeck) return;
 
     const activeNavBtn = document.querySelector('.nav-btn.active');
     const isInboxTab = activeNavBtn && activeNavBtn.dataset.filter === 'all';
 
     // Si on est en mode télécommande OU (mode PC et onglet Inbox avec des séries)
-    if (state.currentMode === 'remote' || (state.currentMode === 'pc' && isInboxTab && seriesCount > 0)) {
-        remoteDeck.hidden = false;
-    } else {
-        remoteDeck.hidden = true;
+    const shouldShow = state.currentMode === 'remote' || (state.currentMode === 'pc' && isInboxTab && seriesCount > 0);
+    const isPcMode = state.currentMode === 'pc';
+    const hiddenByUser = isPcMode && state.remoteDeckHiddenByUser;
+
+    remoteDeck.hidden = !(shouldShow && !hiddenByUser);
+    if (showBtn) {
+        showBtn.hidden = !(shouldShow && hiddenByUser);
     }
 }

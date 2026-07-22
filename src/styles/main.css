@@ -1096,6 +1096,59 @@ nav {
     to   { transform: translate(-50%, 0); opacity: 1; }
 }
 
+.remote-deck__hide {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remote-deck__hide:hover {
+    color: var(--text);
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+.remote-deck-show-btn {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 90;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(9, 11, 22, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(168, 85, 247, 0.1);
+    font-size: 1.4rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.remote-deck-show-btn:hover {
+    transform: translateX(-50%) translateY(-4px);
+}
+
+.remote-deck[hidden],
+.remote-deck-show-btn[hidden] {
+    display: none;
+}
+
 .remote-btn {
     display: flex;
     flex-direction: column;

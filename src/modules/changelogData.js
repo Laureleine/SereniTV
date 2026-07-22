@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.10',
+        date: '2026-07-22',
+        changes: [
+            "Mode PC : possibilité de masquer la fenêtre Oui/Non/Peut-être (petite croix en haut à droite) et de la réafficher via un bouton flottant.",
+        ],
+    },
+    {
         version: '1.6.9',
         date: '2026-07-22',
         changes: [
