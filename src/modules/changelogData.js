@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.4.2',
+        date: '2026-07-22',
+        changes: [
+            "Nettoyage interne : suppression de code mort et d'une dépendance inutilisée (qui était aussi la source d'une alerte de sécurité sur une bibliothèque tierce, désormais résolue). Couleurs de l'écran de démarrage alignées sur la charte actuelle de l'appli.",
+        ],
+    },
+    {
         version: '1.4.1',
         date: '2026-07-22',
         changes: [

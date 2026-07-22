@@ -105,68 +105,6 @@ export async function synchroniserSerieAvecTMDB(tmdbId) {
     return callEdgeFunction('sync-serie', { tmdbId });
 }
 
-/**
- * Point d'entrée pour afficher le détail d'une série.
- *
- * Logique de cache hybride à 7 jours :
- *
- *  ┌─ Série connue en base ?
- *  │     NON  → synchroniserSerieAvecTMDB() en mode BLOQUANT (premier chargement)
- *  │     OUI  →
- *  │           ┌─ Cache valide (< 7 jours) ou série Terminée ?
- *  │           │     OUI → retour immédiat des données locales
- *  │           │     NON → retour immédiat des données locales
- *  │           │           + synchroniserSerieAvecTMDB() lancé en TÂCHE DE FOND
- *  │           │             (l'UI se met à jour à la prochaine ouverture)
- *  └───────────────────────────────────────────────────────────
- *
- * @param {number} tmdbId
- * @returns {Promise<object|null>}
- */
-export async function getHybridSerieData(tmdbId) {
-    try {
-        // 1. Chercher la série dans le cache local (Supabase)
-        const { data: serie, error } = await supabase
-            .from('series')
-            .select('*, saisons (*)')
-            .eq('tmdb_id', tmdbId)
-            .maybeSingle(); // maybeSingle() renvoie null sans erreur si absent
-
-        if (error) throw error;
-
-        // ── Cas A : Série inconnue → premier chargement BLOQUANT ──────────────
-        if (!serie) {
-            console.log(`[CACHE] Série tmdb_id=${tmdbId} absente — synchronisation initiale…`);
-            return await synchroniserSerieAvecTMDB(tmdbId);
-        }
-
-        // ── Cas B : Série connue — vérification du cache ──────────────────────
-        const cacheAge   = Date.now() - new Date(serie.derniere_maj_tmdb).getTime();
-        const cacheValide = cacheAge <= CACHE_TTL_MS || serie.statut_production === 'Terminée';
-
-        if (cacheValide) {
-            // Cache frais ou série terminée (ne bougera plus) → données locales
-            console.log(`[CACHE] ✓ Données locales utilisées pour « ${serie.titre} ».`);
-            return serie;
-        }
-
-        // ── Cas C : Cache périmé → retour immédiat + refresh en tâche de fond ─
-        console.log(`[CACHE] Cache périmé pour « ${serie.titre} » — refresh en arrière-plan…`);
-
-        // Promise non-awaited : l'UI n'attend pas, la synchro se fait silencieusement
-        synchroniserSerieAvecTMDB(tmdbId).catch(err =>
-            console.warn('[CACHE] Refresh arrière-plan échoué (mode hors-ligne ?):', err.message)
-        );
-
-        // On retourne les données locales immédiatement
-        return serie;
-
-    } catch (err) {
-        console.error('[TMDB] Erreur getHybridSerieData — détails complets :', err);
-        return null;
-    }
-}
-
 // ─────────────────────────────────────────────
 // GESTION DES STATUTS UTILISATEUR
 // ─────────────────────────────────────────────
