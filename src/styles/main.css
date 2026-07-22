@@ -1712,6 +1712,65 @@ nav {
     color: var(--p-text);
 }
 
+.kanban-discussion {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--p-border);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.kanban-discussion__empty {
+    color: var(--p-text-muted);
+    font-size: 0.8rem;
+    font-style: italic;
+    margin: 0;
+}
+
+.kanban-discussion__message {
+    background: var(--p-surface);
+    border-radius: var(--p-radius);
+    padding: 8px 10px;
+}
+
+.kanban-discussion__message--assistant {
+    border-left: 3px solid var(--p-accent);
+}
+
+.kanban-discussion__message--utilisateur {
+    border-left: 3px solid var(--p-text-muted);
+}
+
+.kanban-discussion__auteur {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--p-text-muted);
+    margin-bottom: 2px;
+}
+
+.kanban-discussion__message p {
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.kanban-discussion__form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.kanban-discussion__form textarea {
+    font-size: 0.85rem;
+    padding: 8px 10px;
+}
+
+.kanban-discussion__form button {
+    align-self: flex-end;
+}
+
 .feedback-form-wrap {
     margin-top: 28px;
     max-width: 480px;

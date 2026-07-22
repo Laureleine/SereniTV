@@ -134,3 +134,20 @@ CREATE POLICY "parametres_admin_update_owner"
 -- gardée par un secret interne serveur-à-serveur INTERNAL_NOTIFY_SECRET —
 -- jamais exposé au client, à ne pas confondre avec les anciens secrets
 -- côté navigateur qui ont été retirés).
+
+-- ── 9. Commentaires sur les retours (fil de discussion par carte) ──────────
+-- Lecture ouverte à tout compte authentifié. Écriture directe (RLS, pas
+-- d'Edge Function) réservée au propriétaire pour ses propres réponses
+-- ("utilisateur") ; les messages "assistant" sont écrits directement en
+-- base par le skill /bug (accès service_role, hors RLS).
+ALTER TABLE retours_commentaires ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "retours_commentaires_select_authenticated"
+    ON retours_commentaires FOR SELECT
+    TO authenticated
+    USING (true);
+
+CREATE POLICY "retours_commentaires_insert_owner"
+    ON retours_commentaires FOR INSERT
+    TO authenticated
+    WITH CHECK (auth.uid() = 'e062f101-98f4-4d4f-818f-134add366f28'::uuid AND auteur = 'utilisateur');

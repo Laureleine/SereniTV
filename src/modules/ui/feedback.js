@@ -1,4 +1,4 @@
-import { fetchFeedback, soumettreFeedback, changerStatutFeedback, fetchProfilsEnAttente, approuverUtilisateur, refuserUtilisateur, estProprietaire, getParametresAdmin, setNotifierNouvellesInscriptions } from '../access.js';
+import { fetchFeedback, soumettreFeedback, changerStatutFeedback, fetchProfilsEnAttente, approuverUtilisateur, refuserUtilisateur, estProprietaire, getParametresAdmin, setNotifierNouvellesInscriptions, fetchCommentaires, ajouterCommentaire } from '../access.js';
 import { escapeHtml } from './escapeHtml.js';
 import { trapFocus } from './focusTrap.js';
 
@@ -6,6 +6,8 @@ const STATUTS = ['Idées', 'Prévu', 'En cours', 'Fait', 'Refusé'];
 
 let currentTypeFilter = 'all';
 let allFeedback = [];
+let allCommentaires = [];
+const discussionsOuvertes = new Set();
 let releaseFocusFeedback = null;
 let releaseFocusAdmin = null;
 
@@ -96,7 +98,7 @@ function fermerFeedback() {
 }
 
 async function rechargerFeedback() {
-    allFeedback = await fetchFeedback();
+    [allFeedback, allCommentaires] = await Promise.all([fetchFeedback(), fetchCommentaires()]);
     renderKanban();
 }
 
@@ -115,7 +117,10 @@ function renderKanban() {
         return `
             <div class="kanban-column">
                 <div class="kanban-column__title">${statut} (${items.length})</div>
-                ${items.map(f => `
+                ${items.map(f => {
+                    const commentaires = allCommentaires.filter(c => c.retour_id === f.id);
+                    const ouverte = discussionsOuvertes.has(f.id);
+                    return `
                     <div class="kanban-card">
                         <div class="kanban-card__header">
                             <span class="kanban-card__id">#${f.id}</span>
@@ -125,12 +130,30 @@ function renderKanban() {
                         ${f.description ? `<div class="kanban-card__description">${escapeHtml(f.description)}</div>` : ''}
                         <div class="kanban-card__actions">
                             <button type="button" class="kanban-card__copy" data-copy-id="${f.id}">Copier</button>
+                            <button type="button" class="kanban-card__discussion-toggle" data-toggle-discussion="${f.id}">💬 Discussion (${commentaires.length})</button>
                             ${proprietaire ? STATUTS.filter(s => s !== statut).map(s => `
                                 <button type="button" data-move-to="${s}" data-feedback-id="${f.id}">${s}</button>
                             `).join('') : ''}
                         </div>
+                        ${ouverte ? `
+                            <div class="kanban-discussion">
+                                ${commentaires.length === 0 ? '<p class="kanban-discussion__empty">Aucun message pour l\'instant.</p>' : commentaires.map(c => `
+                                    <div class="kanban-discussion__message kanban-discussion__message--${c.auteur}">
+                                        <span class="kanban-discussion__auteur">${c.auteur === 'assistant' ? 'Claude' : 'Toi'}</span>
+                                        <p>${escapeHtml(c.message)}</p>
+                                    </div>
+                                `).join('')}
+                                ${proprietaire ? `
+                                    <form class="kanban-discussion__form" data-reply-id="${f.id}">
+                                        <textarea class="auth-input auth-textarea" rows="2" placeholder="Répondre…" required></textarea>
+                                        <button type="submit" class="btn portal-btn">Envoyer</button>
+                                    </form>
+                                ` : ''}
+                            </div>
+                        ` : ''}
                     </div>
-                `).join('')}
+                `;
+                }).join('')}
             </div>
         `;
     }).join('');
@@ -149,6 +172,31 @@ function renderKanban() {
             } catch (err) {
                 console.error('[FEEDBACK] Erreur copie presse-papiers:', err);
             }
+        });
+    });
+
+    board.querySelectorAll('[data-toggle-discussion]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const feedbackId = parseInt(btn.dataset.toggleDiscussion);
+            if (discussionsOuvertes.has(feedbackId)) {
+                discussionsOuvertes.delete(feedbackId);
+            } else {
+                discussionsOuvertes.add(feedbackId);
+            }
+            renderKanban();
+        });
+    });
+
+    board.querySelectorAll('[data-reply-id]').forEach(form => {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const feedbackId = parseInt(form.dataset.replyId);
+            const textarea = form.querySelector('textarea');
+            const message = textarea.value.trim();
+            if (!message) return;
+
+            const result = await ajouterCommentaire(feedbackId, message);
+            if (result.success) await rechargerFeedback();
         });
     });
 

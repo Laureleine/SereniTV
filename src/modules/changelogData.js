@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.6',
+        date: '2026-07-22',
+        changes: [
+            "Fil de discussion sur chaque carte du Kanban Feedback : questions/réponses directement dessus, pour échanger sur un bug ou une idée sans quitter la carte.",
+        ],
+    },
+    {
         version: '1.6.5',
         date: '2026-07-22',
         changes: [

@@ -143,3 +143,33 @@ export async function setNotifierNouvellesInscriptions(actif) {
     }
     return { success: true };
 }
+
+/**
+ * Liste tous les commentaires de tous les retours (le fil de discussion par
+ * carte), visibles par tout compte authentifié.
+ */
+export async function fetchCommentaires() {
+    const { data, error } = await supabase
+        .from('retours_commentaires')
+        .select('*')
+        .order('created_at');
+    if (error) {
+        console.error('[FEEDBACK] Erreur fetchCommentaires:', error);
+        return [];
+    }
+    return data || [];
+}
+
+/**
+ * Ajoute une réponse (propriétaire uniquement, RLS) sur le fil d'une carte.
+ */
+export async function ajouterCommentaire(retourId, message) {
+    const { error } = await supabase
+        .from('retours_commentaires')
+        .insert({ retour_id: retourId, auteur: 'utilisateur', message });
+    if (error) {
+        console.error('[FEEDBACK] Erreur ajouterCommentaire:', error);
+        return { success: false, error };
+    }
+    return { success: true };
+}
