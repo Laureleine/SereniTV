@@ -1,31 +1,9 @@
 import { supabase } from '../supabase.js';
 import { renderSeries, renderFetchError } from './ui/catalogRender.js';
 import { getSavedSortOrder, saveSortOrder } from './ui/sortOrder.js';
+import { callEdgeFunction } from './edgeFunctions.js';
 
 let seriesData = [];
-
-// ─────────────────────────────────────────────
-// APPEL DES EDGE FUNCTIONS (le token TMDB et les écritures restent côté serveur)
-// ─────────────────────────────────────────────
-const EDGE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-
-async function callEdgeFunction(name, payload) {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Session expirée, veuillez vous reconnecter.');
-
-    const response = await fetch(`${EDGE_FUNCTIONS_URL}/${name}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify(payload),
-    });
-
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || `Erreur ${name} (HTTP ${response.status})`);
-    return data;
-}
 
 // Durée du cache local avant re-synchro TMDB
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours

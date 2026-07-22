@@ -1297,6 +1297,210 @@ nav {
     pointer-events: none;
 }
 
+/* ============================================================================
+   PORTAIL PUBLIC : landing, connexion/inscription, attente, feedback, admin.
+   Charte partagée avec Sérénité Mail (fusion prévue sur un même site à terme).
+   ============================================================================ */
+.portal {
+    --p-bg: #13151F;
+    --p-surface: #1A1D2E;
+    --p-border: #2A2D40;
+    --p-text: #E8EAF6;
+    --p-text-muted: #9297b3;
+    --p-accent: #5B7CF8;
+    --p-accent-hover: #4863d4;
+    --p-danger: #f87171;
+    --p-radius: 8px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    color: var(--p-text);
+}
+
+.portal-landing {
+    position: fixed;
+    inset: 0;
+    background: var(--p-bg);
+    z-index: 9998;
+    overflow-y: auto;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.portal-landing.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.portal-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 32px;
+    border-bottom: 1px solid var(--p-border);
+}
+
+.portal-nav__brand {
+    font-weight: 700;
+    font-size: 1.05rem;
+}
+
+.portal-nav__links {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.portal-nav__link {
+    background: none;
+    border: none;
+    color: var(--p-text-muted);
+    font-family: inherit;
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+.portal-nav__link:hover {
+    color: var(--p-text);
+}
+
+.portal-hero {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 100px 24px 60px;
+    text-align: center;
+}
+
+.portal-hero__eyebrow {
+    color: var(--p-accent);
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+}
+
+.portal-hero__title {
+    font-size: clamp(1.8rem, 4vw, 2.6rem);
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: normal;
+    margin-bottom: 20px;
+    background: none;
+    -webkit-text-fill-color: var(--p-text);
+    filter: none;
+}
+
+.portal-hero__subtitle {
+    color: var(--p-text-muted);
+    font-size: 1.05rem;
+    line-height: 1.6;
+    margin-bottom: 36px;
+}
+
+.portal-btn {
+    background: var(--p-accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--p-radius);
+    padding: 12px 22px;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.portal-btn:hover:not(:disabled) {
+    background: var(--p-accent-hover);
+}
+
+.portal-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.portal-btn--large {
+    padding: 16px 32px;
+    font-size: 1.05rem;
+}
+
+.portal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(9, 10, 15, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.portal-overlay.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.portal-card {
+    background: var(--p-surface);
+    border: 1px solid var(--p-border);
+    border-radius: var(--p-radius);
+    padding: 36px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+.portal-card--wide {
+    max-width: 900px;
+    max-height: 85vh;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.portal-overlay--wide {
+    align-items: flex-start;
+    padding-top: 40px;
+}
+
+.portal-card__title {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.portal-card__subtitle {
+    color: var(--p-text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 24px;
+    line-height: 1.5;
+}
+
+.portal-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 24px 0 12px;
+}
+
+.portal-label {
+    font-size: 0.85rem;
+    color: var(--p-text-muted);
+    text-align: left;
+}
+
+.portal-link-btn {
+    background: none;
+    border: none;
+    color: var(--p-accent);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.portal-link-btn:hover {
+    text-decoration: underline;
+}
+
 .auth-form {
     display: flex;
     flex-direction: column;
@@ -1307,19 +1511,24 @@ nav {
 }
 
 .auth-input {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    color: var(--text);
+    background: var(--p-bg);
+    border: 1px solid var(--p-border);
+    border-radius: var(--p-radius);
+    color: var(--p-text);
     font-size: 1rem;
     font-family: inherit;
     padding: 14px 16px;
 }
 
+.auth-textarea {
+    resize: vertical;
+    font-family: inherit;
+}
+
 .auth-input:focus {
     outline: none;
-    border-color: var(--electric-purp);
-    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+    border-color: var(--p-accent);
+    box-shadow: 0 0 0 3px rgba(91, 124, 248, 0.2);
 }
 
 .auth-submit {
@@ -1327,9 +1536,208 @@ nav {
 }
 
 .auth-error {
-    color: var(--danger);
+    color: var(--p-danger);
     font-size: 0.9rem;
     margin: 0;
+}
+
+.auth-success {
+    color: #34d399;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+/* ── Feedback (Kanban) ── */
+.feedback-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+}
+
+.feedback-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.feedback-filter {
+    background: var(--p-bg);
+    border: 1px solid var(--p-border);
+    color: var(--p-text-muted);
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.feedback-filter.is-active {
+    background: var(--p-accent);
+    border-color: var(--p-accent);
+    color: #fff;
+}
+
+.kanban-board {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(160px, 1fr));
+    gap: 12px;
+    overflow-x: auto;
+}
+
+.kanban-column__title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--p-text-muted);
+    margin-bottom: 10px;
+}
+
+.kanban-card {
+    background: var(--p-bg);
+    border: 1px solid var(--p-border);
+    border-radius: var(--p-radius);
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    font-size: 0.85rem;
+}
+
+.kanban-card__type {
+    display: inline-block;
+    font-size: 0.7rem;
+    color: var(--p-accent);
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.kanban-card__titre {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.kanban-card__description {
+    color: var(--p-text-muted);
+    font-size: 0.8rem;
+    margin-bottom: 8px;
+}
+
+.kanban-card__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+.kanban-card__actions button {
+    background: none;
+    border: 1px solid var(--p-border);
+    color: var(--p-text-muted);
+    border-radius: 6px;
+    font-size: 0.7rem;
+    padding: 3px 6px;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+.kanban-card__actions button:hover {
+    border-color: var(--p-accent);
+    color: var(--p-text);
+}
+
+.feedback-form-wrap {
+    border-top: 1px solid var(--p-border);
+    margin-top: 20px;
+    padding-top: 20px;
+}
+
+.feedback-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    align-items: center;
+}
+
+.feedback-close {
+    margin-top: 20px;
+}
+
+/* ── Panneau admin ── */
+.admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-list-item {
+    background: var(--p-bg);
+    border: 1px solid var(--p-border);
+    border-radius: var(--p-radius);
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.admin-list-item__info {
+    font-size: 0.85rem;
+}
+
+.admin-list-item__motivation {
+    color: var(--p-text-muted);
+    font-size: 0.8rem;
+    margin-top: 4px;
+}
+
+.admin-list-item__actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.admin-list-item__actions button {
+    border-radius: 6px;
+    border: 1px solid var(--p-border);
+    background: none;
+    color: var(--p-text-muted);
+    font-family: inherit;
+    font-size: 0.8rem;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.admin-list-item__actions button:hover {
+    color: var(--p-text);
+    border-color: var(--p-accent);
+}
+
+.admin-empty {
+    color: var(--p-text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+/* ── Boutons flottants Feedback / Admin (dans l'appli) ── */
+.btn-feedback,
+.btn-admin {
+    position: fixed;
+    top: 16px;
+    left: 16px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 40;
+}
+
+.btn-admin {
+    top: 60px;
 }
 
 .mode-selection-content {

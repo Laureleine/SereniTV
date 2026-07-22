@@ -1,6 +1,7 @@
 import { initUI } from './modules/ui.js';
 import { fetchSeries, verifierRenouvellementSaisons } from './modules/series.js';
 import { initAuth } from './modules/ui/auth.js';
+import { initChangelogModal } from './modules/ui/changelog.js';
 
 // Enregistrement du Service Worker
 const SERVICE_WORKER_URL = new URL('/service-worker.js', location.origin).href;
@@ -30,6 +31,10 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // Indépendant de l'état de connexion : le lien "Changelog" de la landing
+    // page publique doit fonctionner avant toute authentification.
+    initChangelogModal();
+
     await initAuth(async () => {
         // Initialiser l'interface utilisateur
         initUI();

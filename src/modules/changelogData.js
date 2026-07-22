@@ -7,6 +7,14 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.0',
+        date: '2026-07-22',
+        changes: [
+            "Nouvelle page d'accueil publique : SéréniTV passe en bêta privée sur invitation, avec inscription (email + mot de passe + message de motivation) et validation manuelle des demandes.",
+            "Nouvel espace Feedback pour les testeurs approuvés : Kanban (Idées/Prévu/En cours/Fait/Refusé) filtrable par type (Bug/Idée/Autre), avec formulaire de soumission.",
+        ],
+    },
+    {
         version: '1.5.0',
         date: '2026-07-22',
         changes: [

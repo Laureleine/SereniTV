@@ -13,8 +13,23 @@
 --     (service_role), qui dérive elle-même le user_id du JWT vérifié (jamais
 --     du corps de la requête).
 --
---   Les 4 Edge Functions (tmdb-search, sync-serie, update-user-status,
---   manage-themes) vérifient chacune le JWT de la requête auprès de Supabase Auth avant
+--   • Profils utilisateurs (bêta privée sur invitation) :
+--     Chacun lit sa propre ligne (pour connaître son statut d'accès) ; le
+--     propriétaire (UUID fixe) lit toutes les lignes pour approuver/refuser.
+--     Écriture : AUCUNE policy anon/authenticated — la ligne est créée
+--     automatiquement par un trigger sur auth.users à l'inscription, et le
+--     statut n'est modifié que via l'Edge Function manage-user-access
+--     (service_role, réservée au propriétaire).
+--
+--   • Retours utilisateurs (Kanban feedback) :
+--     Lecture ouverte à tout compte authentifié (le Kanban est commun à tous
+--     les testeurs). Écriture : AUCUNE policy anon/authenticated — création
+--     via submit-feedback (réservée aux comptes approuvés), changement de
+--     statut via manage-feedback (réservée au propriétaire).
+--
+--   Les 7 Edge Functions (tmdb-search, sync-serie, update-user-status,
+--   manage-themes, manage-user-access, submit-feedback, manage-feedback)
+--   vérifient chacune le JWT de la requête auprès de Supabase Auth avant
 --   toute action — il n'existe plus de secret partagé côté client (un secret
 --   envoyé par le navigateur est par nature toujours extractible du bundle JS,
 --   donc jamais réellement secret).
@@ -74,3 +89,25 @@ CREATE POLICY "user_saisons_select_own"
 -- update-user-status avec service_role. Ne pas ajouter de policy d'écriture
 -- ici : c'est précisément ce qui permettait à n'importe qui de modifier les
 -- données de n'importe quel utilisateur avant la correction de sécurité.
+
+-- ── 6. Profils utilisateurs (bêta privée) ───────────────────────────────────
+ALTER TABLE profils_utilisateurs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "profils_select_own_or_owner"
+    ON profils_utilisateurs FOR SELECT
+    TO authenticated
+    USING (auth.uid() = id OR auth.uid() = 'e062f101-98f4-4d4f-818f-134add366f28'::uuid);
+
+-- Écriture uniquement via le trigger creer_profil_utilisateur() (à l'inscription)
+-- et l'Edge Function manage-user-access (approbation/refus, service_role).
+
+-- ── 7. Retours utilisateurs (Kanban feedback) ───────────────────────────────
+ALTER TABLE retours_utilisateurs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "retours_select_authenticated"
+    ON retours_utilisateurs FOR SELECT
+    TO authenticated
+    USING (true);
+
+-- Écriture uniquement via submit-feedback (création) et manage-feedback
+-- (changement de statut, service_role réservé au propriétaire).

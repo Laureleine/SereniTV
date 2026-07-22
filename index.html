@@ -32,6 +32,10 @@
     <!-- ── Badge de version (notes de version au clic) ── -->
     <button id="version-badge" class="version-badge" aria-label="Voir les notes de version"></button>
 
+    <!-- ── Accès Feedback (testeurs) / Admin (propriétaire) ── -->
+    <button id="btn-open-feedback" class="btn-feedback" aria-label="Feedback" title="Feedback" hidden>💬</button>
+    <button id="btn-open-admin" class="btn-admin" aria-label="Administration" title="Administration" hidden>🛠️</button>
+
     <!-- ── Notes de version ── -->
     <div id="changelog-overlay" class="modal-overlay" role="presentation"></div>
     <div id="changelog-modal" class="modal changelog-modal" role="dialog" aria-modal="true" aria-labelledby="changelog-titre">
@@ -46,22 +50,113 @@
         </div>
     </div>
 
-    <!-- ── Écran de connexion (avant tout le reste) ── -->
-    <div id="auth-overlay" class="mode-selection-overlay">
-        <div class="mode-selection-content">
-            <h2 class="mode-selection-title">SéréniTV</h2>
-            <p class="mode-selection-subtitle">Connexion</p>
+    <!-- ── Page d'accueil publique (bêta privée) ── -->
+    <div id="landing-screen" class="portal portal-landing">
+        <nav class="portal-nav">
+            <span class="portal-nav__brand">✦ SéréniTV</span>
+            <div class="portal-nav__links">
+                <button id="landing-nav-changelog" class="portal-nav__link">Changelog</button>
+                <button id="landing-nav-login" class="portal-nav__link">Se connecter</button>
+                <button id="landing-nav-signup" class="btn portal-btn">Rejoindre la bêta</button>
+            </div>
+        </nav>
+        <main class="portal-hero">
+            <p class="portal-hero__eyebrow">✦</p>
+            <h1 class="portal-hero__title">Le gestionnaire de séries pensé pour toute la famille</h1>
+            <p class="portal-hero__subtitle">
+                Suivi des séries et des saisons, synchronisé en temps réel entre PC, mobile et télé.
+                Actuellement en bêta privée sur invitation.
+            </p>
+            <button id="landing-cta-signup" class="btn portal-btn portal-btn--large">Rejoindre la bêta</button>
+        </main>
+    </div>
+
+    <!-- ── Écran de connexion / inscription (avant l'appli) ── -->
+    <div id="auth-overlay" class="portal portal-overlay hidden">
+        <div class="portal-card">
+            <h2 class="portal-card__title">SéréniTV</h2>
+            <p id="auth-subtitle" class="portal-card__subtitle">Connexion</p>
             <form id="auth-form" class="auth-form">
                 <input type="email" id="auth-email" class="auth-input" placeholder="Email" autocomplete="username" required>
                 <input type="password" id="auth-password" class="auth-input" placeholder="Mot de passe" autocomplete="current-password" required>
-                <button type="submit" id="auth-submit" class="btn btn--primary auth-submit">Se connecter</button>
+                <textarea id="auth-motivation" class="auth-input auth-textarea" placeholder="Pourquoi souhaitez-vous rejoindre la bêta ? (optionnel)" rows="3" hidden></textarea>
+                <button type="submit" id="auth-submit" class="btn portal-btn">Se connecter</button>
+                <button type="button" id="auth-toggle-mode" class="portal-link-btn">Pas encore de compte ? Rejoindre la bêta</button>
                 <p id="auth-error" class="auth-error" role="alert" hidden></p>
+                <p id="auth-success" class="auth-success" role="status" hidden></p>
             </form>
         </div>
     </div>
 
+    <!-- ── Écran d'attente de validation ── -->
+    <div id="pending-screen" class="portal portal-overlay hidden">
+        <div class="portal-card">
+            <h2 class="portal-card__title">Demande reçue</h2>
+            <p class="portal-card__subtitle">
+                Ton inscription est en attente de validation. Tu recevras l'accès dès qu'elle sera approuvée.
+            </p>
+            <button id="pending-refresh" class="btn portal-btn">Revérifier</button>
+        </div>
+    </div>
+
+    <!-- ── Écran de refus ── -->
+    <div id="refused-screen" class="portal portal-overlay hidden">
+        <div class="portal-card">
+            <h2 class="portal-card__title">Demande non retenue</h2>
+            <p class="portal-card__subtitle">Ta demande d'accès à la bêta privée n'a pas été validée.</p>
+        </div>
+    </div>
+
+    <!-- ── Vue Feedback (Kanban) ── -->
+    <div id="feedback-overlay" class="portal portal-overlay portal-overlay--wide hidden">
+        <div class="portal-card portal-card--wide">
+            <div class="feedback-header">
+                <h2 class="portal-card__title">Feedback</h2>
+                <button id="feedback-nouvelle-demande" class="btn portal-btn">Nouvelle demande</button>
+            </div>
+            <div class="feedback-filters" id="feedback-filters">
+                <button class="feedback-filter is-active" data-type="all">Tous</button>
+                <button class="feedback-filter" data-type="Bug">Bug</button>
+                <button class="feedback-filter" data-type="Idée">Idée</button>
+                <button class="feedback-filter" data-type="Autre">Autre</button>
+            </div>
+            <div class="kanban-board" id="kanban-board"></div>
+
+            <!-- Formulaire "Nouvelle demande" -->
+            <div id="feedback-form-wrap" class="feedback-form-wrap" hidden>
+                <form id="feedback-form" class="auth-form">
+                    <label class="portal-label" for="feedback-type">Type</label>
+                    <select id="feedback-type" class="auth-input">
+                        <option value="Bug">Bug</option>
+                        <option value="Idée">Idée</option>
+                        <option value="Autre">Autre</option>
+                    </select>
+                    <label class="portal-label" for="feedback-titre">Titre</label>
+                    <input type="text" id="feedback-titre" class="auth-input" required>
+                    <label class="portal-label" for="feedback-description">Description</label>
+                    <textarea id="feedback-description" class="auth-input auth-textarea" rows="4"></textarea>
+                    <div class="feedback-form-actions">
+                        <button type="button" id="feedback-annuler" class="portal-link-btn">Annuler</button>
+                        <button type="submit" class="btn portal-btn">Envoyer</button>
+                    </div>
+                </form>
+            </div>
+
+            <button id="feedback-fermer" class="btn btn--ghost feedback-close">Fermer</button>
+        </div>
+    </div>
+
+    <!-- ── Panneau admin (visible seulement pour le compte propriétaire) ── -->
+    <div id="admin-overlay" class="portal portal-overlay hidden">
+        <div class="portal-card">
+            <h2 class="portal-card__title">Inscriptions en attente</h2>
+            <div id="admin-pending-list" class="admin-list"></div>
+            <button id="admin-fermer" class="btn btn--ghost feedback-close">Fermer</button>
+        </div>
+    </div>
+
     <!-- ── Écran de Sélection de Mode (Overlay de démarrage) ── -->
-    <div id="mode-selection-overlay" class="mode-selection-overlay">
+    <div id="mode-selection-overlay" class="mode-selection-overlay hidden">
         <div class="mode-selection-content">
             <h2 class="mode-selection-title">SéréniTV</h2>
             <p class="mode-selection-subtitle">Choisissez votre mode d'utilisation :</p>

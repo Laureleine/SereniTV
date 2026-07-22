@@ -20,6 +20,7 @@ import { getSavedMode, saveMode, clearSavedMode } from './ui/deviceMode.js';
 import { initChangelogBadge } from './ui/changelog.js';
 import { showToast } from './ui/toast.js';
 import { initThemeFilter } from './ui/themeFilter.js';
+import { initFeedback } from './ui/feedback.js';
 
 // ─────────────────────────────────────────────
 // INITIALISATION
@@ -68,10 +69,12 @@ export function initUI() {
     const savedMode = getSavedMode();
 
     if (savedMode) {
-        // Rôle déjà mémorisé sur cet appareil : on ne montre plus l'overlay.
+        // Rôle déjà mémorisé sur cet appareil : on ne montre pas l'overlay.
         if (overlay) overlay.classList.add('hidden');
         activerMode(savedMode);
     } else if (overlay && btnTv && btnRemote && btnPc) {
+        overlay.classList.remove('hidden');
+
         btnTv.addEventListener('click', () => {
             saveMode('tv');
             overlay.classList.add('hidden');
@@ -256,4 +259,7 @@ export function initUI() {
 
     // Filtre par thème + gestion des thèmes sur les cartes
     initThemeFilter();
+
+    // Feedback (testeurs) + panneau admin (propriétaire uniquement)
+    initFeedback();
 }
