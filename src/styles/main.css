@@ -1693,6 +1693,22 @@ nav {
 }
 
 /* ── Panneau admin ── */
+.admin-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--p-text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 20px;
+    cursor: pointer;
+}
+
+.admin-toggle input {
+    accent-color: var(--p-accent);
+    width: 16px;
+    height: 16px;
+}
+
 .admin-list {
     display: flex;
     flex-direction: column;

@@ -110,3 +110,36 @@ export async function changerStatutFeedback(feedbackId, statut) {
         return { success: false, error };
     }
 }
+
+/**
+ * Récupère les réglages admin (notification par email des nouvelles inscriptions).
+ * @returns {Promise<{notifier_nouvelles_inscriptions: boolean}|null>}
+ */
+export async function getParametresAdmin() {
+    const { data, error } = await supabase
+        .from('parametres_admin')
+        .select('notifier_nouvelles_inscriptions')
+        .eq('id', 1)
+        .maybeSingle();
+    if (error) {
+        console.error('[ADMIN] Erreur getParametresAdmin:', error);
+        return null;
+    }
+    return data;
+}
+
+/**
+ * Active/désactive la notification par email à chaque nouvelle inscription.
+ * Réservé au propriétaire (RLS).
+ */
+export async function setNotifierNouvellesInscriptions(actif) {
+    const { error } = await supabase
+        .from('parametres_admin')
+        .update({ notifier_nouvelles_inscriptions: actif })
+        .eq('id', 1);
+    if (error) {
+        console.error('[ADMIN] Erreur setNotifierNouvellesInscriptions:', error);
+        return { success: false, error };
+    }
+    return { success: true };
+}

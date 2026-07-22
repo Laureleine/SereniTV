@@ -111,3 +111,26 @@ CREATE POLICY "retours_select_authenticated"
 
 -- Écriture uniquement via submit-feedback (création) et manage-feedback
 -- (changement de statut, service_role réservé au propriétaire).
+
+-- ── 8. Réglages admin (singleton) ───────────────────────────────────────────
+-- Seule table où le propriétaire a un accès direct en écriture (via RLS,
+-- sans Edge Function) : un simple interrupteur qui ne concerne que lui,
+-- pas de données utilisateur tierces en jeu.
+ALTER TABLE parametres_admin ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "parametres_admin_select_owner"
+    ON parametres_admin FOR SELECT
+    TO authenticated
+    USING (auth.uid() = 'e062f101-98f4-4d4f-818f-134add366f28'::uuid);
+
+CREATE POLICY "parametres_admin_update_owner"
+    ON parametres_admin FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = 'e062f101-98f4-4d4f-818f-134add366f28'::uuid)
+    WITH CHECK (auth.uid() = 'e062f101-98f4-4d4f-818f-134add366f28'::uuid);
+
+-- Le trigger creer_profil_utilisateur() lit ce réglage à chaque inscription
+-- et, si activé, appelle l'Edge Function notify-new-signup (verify_jwt=false,
+-- gardée par un secret interne serveur-à-serveur INTERNAL_NOTIFY_SECRET —
+-- jamais exposé au client, à ne pas confondre avec les anciens secrets
+-- côté navigateur qui ont été retirés).

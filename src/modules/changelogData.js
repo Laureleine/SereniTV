@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.3',
+        date: '2026-07-22',
+        changes: [
+            "Notification par email à chaque nouvelle demande d'inscription à la bêta, avec un interrupteur pour l'activer/désactiver dans le panneau admin.",
+        ],
+    },
+    {
         version: '1.6.2',
         date: '2026-07-22',
         changes: [

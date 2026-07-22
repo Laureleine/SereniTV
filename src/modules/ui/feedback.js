@@ -1,4 +1,4 @@
-import { fetchFeedback, soumettreFeedback, changerStatutFeedback, fetchProfilsEnAttente, approuverUtilisateur, refuserUtilisateur, estProprietaire } from '../access.js';
+import { fetchFeedback, soumettreFeedback, changerStatutFeedback, fetchProfilsEnAttente, approuverUtilisateur, refuserUtilisateur, estProprietaire, getParametresAdmin, setNotifierNouvellesInscriptions } from '../access.js';
 import { escapeHtml } from './escapeHtml.js';
 import { trapFocus } from './focusTrap.js';
 
@@ -40,6 +40,10 @@ export function initFeedback() {
 
     adminFermer?.addEventListener('click', fermerAdmin);
     adminOverlay?.addEventListener('click', (e) => { if (e.target === adminOverlay) fermerAdmin(); });
+
+    document.getElementById('admin-toggle-notif')?.addEventListener('change', async (e) => {
+        await setNotifierNouvellesInscriptions(e.target.checked);
+    });
 
     btnNouvelle?.addEventListener('click', () => {
         formWrap.hidden = false;
@@ -147,6 +151,11 @@ async function ouvrirAdmin() {
     const overlay = document.getElementById('admin-overlay');
     overlay.classList.remove('hidden');
     releaseFocusAdmin = trapFocus(overlay.querySelector('.portal-card'), fermerAdmin);
+
+    const parametres = await getParametresAdmin();
+    const toggle = document.getElementById('admin-toggle-notif');
+    if (toggle) toggle.checked = parametres?.notifier_nouvelles_inscriptions ?? true;
+
     await rechargerAdmin();
 }
 
