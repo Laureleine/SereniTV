@@ -1501,9 +1501,9 @@ nav {
 }
 
 .feedback-page {
-    max-width: 1280px;
+    max-width: none;
     margin: 0 auto;
-    padding: 32px 32px 80px;
+    padding: 32px 40px 80px;
     text-align: left;
 }
 
@@ -1625,23 +1625,24 @@ nav {
 
 .kanban-board {
     display: grid;
-    grid-template-columns: repeat(5, minmax(220px, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 20px;
     align-items: start;
     overflow-x: auto;
     padding-bottom: 8px;
+    width: 100%;
 }
 
 .kanban-column {
     background: var(--p-surface);
     border: 1px solid var(--p-border);
     border-radius: var(--p-radius);
-    padding: 16px;
+    padding: 18px;
     min-height: 60vh;
 }
 
 .kanban-column__title {
-    font-size: 0.9rem;
+    font-size: 1.05rem;
     font-weight: 700;
     color: var(--p-text-muted);
     margin-bottom: 14px;
@@ -1653,9 +1654,9 @@ nav {
     background: var(--p-bg);
     border: 1px solid var(--p-border);
     border-radius: var(--p-radius);
-    padding: 14px 16px;
-    margin-bottom: 12px;
-    font-size: 0.92rem;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+    font-size: 1.05rem;
 }
 
 .kanban-card__header {
@@ -1666,14 +1667,14 @@ nav {
 }
 
 .kanban-card__id {
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     color: var(--p-text-muted);
     font-weight: 600;
 }
 
 .kanban-card__type {
     display: inline-block;
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     color: var(--p-accent);
     font-weight: 700;
     text-transform: uppercase;
@@ -1683,11 +1684,12 @@ nav {
     font-weight: 600;
     margin-bottom: 6px;
     line-height: 1.4;
+    font-size: 1.1rem;
 }
 
 .kanban-card__description {
     color: var(--p-text-muted);
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     line-height: 1.5;
     margin-bottom: 10px;
 }
@@ -1725,7 +1727,7 @@ nav {
 
 .kanban-discussion__empty {
     color: var(--p-text-muted);
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     font-style: italic;
     margin: 0;
 }
@@ -1746,14 +1748,14 @@ nav {
 
 .kanban-discussion__auteur {
     display: block;
-    font-size: 0.72rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--p-text-muted);
     margin-bottom: 2px;
 }
 
 .kanban-discussion__message p {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     line-height: 1.5;
     margin: 0;
 }
@@ -1765,7 +1767,7 @@ nav {
 }
 
 .kanban-discussion__form textarea {
-    font-size: 0.85rem;
+    font-size: 0.95rem;
     padding: 8px 10px;
 }
 

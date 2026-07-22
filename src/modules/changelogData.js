@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.8',
+        date: '2026-07-22',
+        changes: [
+            "Kanban Feedback : les colonnes prennent maintenant toute la largeur de l'écran et le texte des cartes est plus grand, pour une meilleure lisibilité.",
+        ],
+    },
+    {
         version: '1.6.7',
         date: '2026-07-22',
         changes: [

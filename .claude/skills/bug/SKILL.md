@@ -15,7 +15,9 @@ Projet Supabase : `flvvjlytntnethjyyuix`. Tables : `retours_utilisateurs` (id, t
 ## Étapes
 
 1. **Sélection** (uniquement si déclenché par `/bug`, pas par un copier-coller direct)
-   Requête : `type = 'Bug' AND statut = 'Prévu'`, triée par `created_at` croissant (le plus ancien en premier — pas encore de champ de criticité, à revoir si ce champ est ajouté un jour). Prends la première carte. Si aucune carte ne correspond, dis-le à l'utilisateur et arrête-toi là.
+   Requête : `type = 'Bug' AND statut = 'Prévu'`, triée par `created_at` croissant (le plus ancien en premier — pas encore de champ de criticité, à revoir si ce champ est ajouté un jour). Prends la première carte.
+   S'il n'y a aucun `Bug` en `Prévu`, prends plutôt la carte la plus ancienne avec `type = 'Idée' AND statut = 'Prévu'`.
+   Si aucune carte ne correspond (ni Bug ni Idée en Prévu), dis-le à l'utilisateur et arrête-toi là.
 
 2. **Passage en "En cours"**
    Mets à jour `statut = 'En cours'` sur cette carte immédiatement, avant toute analyse.
