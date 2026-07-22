@@ -14,6 +14,10 @@ const supabase = createClient(
 const NB_ANCIENNES_PAR_SEMAINE = 100;
 const MAX_PAGE_DISCOVER = 500; // limite dure de l'API TMDB
 
+// N'importer que des séries ayant au moins une offre légale (streaming/location/achat)
+// en France — le proxy le plus fiable disponible côté TMDB pour approcher "VF ou VOSTFR".
+const FILTRE_DISPONIBILITE_FR = '&watch_region=FR&with_watch_monetization_types=flatrate%7Cfree%7Cads%7Crent%7Cbuy';
+
 function mapperStatutTMDB(tmdbStatus: string) {
   return (tmdbStatus === 'Ended' || tmdbStatus === 'Canceled') ? 'Terminée' : 'En cours';
 }
@@ -158,7 +162,7 @@ async function importerNouveautes(dejaConnus: Set<number>) {
 
   do {
     const data = await tmdbFetch(
-      `/discover/tv?first_air_date.gte=${fmt(ilYA7Jours)}&first_air_date.lte=${fmt(aujourdHui)}&sort_by=popularity.desc&page=${page}`
+      `/discover/tv?first_air_date.gte=${fmt(ilYA7Jours)}&first_air_date.lte=${fmt(aujourdHui)}&sort_by=popularity.desc&page=${page}${FILTRE_DISPONIBILITE_FR}`
     );
     totalPages = Math.min(data.total_pages || 1, MAX_PAGE_DISCOVER);
 
@@ -187,7 +191,7 @@ async function importerAnciennes(dejaConnus: Set<number>, pageDepart: number) {
   let echecs = 0;
 
   while (importees < NB_ANCIENNES_PAR_SEMAINE && page <= MAX_PAGE_DISCOVER) {
-    const data = await tmdbFetch(`/discover/tv?sort_by=popularity.desc&page=${page}`);
+    const data = await tmdbFetch(`/discover/tv?sort_by=popularity.desc&page=${page}${FILTRE_DISPONIBILITE_FR}`);
     const resultats = data.results || [];
     if (resultats.length === 0) break;
 

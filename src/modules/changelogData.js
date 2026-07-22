@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.1',
+        date: '2026-07-22',
+        changes: [
+            "L'import automatique hebdomadaire ne retient désormais que les séries disponibles légalement en France (une manière fiable d'éviter les séries confidentielles sans VF ni VOSTFR).",
+        ],
+    },
+    {
         version: '1.7.0',
         date: '2026-07-22',
         changes: [
