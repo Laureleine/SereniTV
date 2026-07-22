@@ -84,6 +84,7 @@ export function renderSeries(seriesList) {
                     <h2 class="serie-title">${escapeHtml(activeSerie.titre)}</h2>
                 </div>
                 ${activeSerie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(activeSerie.plateforme)}</div>` : ''}
+                ${activeSerie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(activeSerie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
                 <p class="serie-synopsis">${escapeHtml(activeSerie.synopsis) || 'Aucun résumé disponible.'}</p>
                 ${(() => {
                     const playLink = getPlayLink(activeSerie);
@@ -136,6 +137,7 @@ export function renderSeries(seriesList) {
                     <h2 class="serie-title">${escapeHtml(serie.titre)}</h2>
                 </div>
                 ${serie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(serie.plateforme)}</div>` : ''}
+                ${serie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(serie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
                 <p class="serie-synopsis">${escapeHtml(serie.synopsis) || 'Aucun résumé disponible.'}</p>
                 <div class="serie-themes" data-serie-id="${serie.id}">
                     ${(serie.themes || []).map(t => `

@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.9',
+        date: '2026-07-22',
+        changes: [
+            "Ajout d'un lien IMDB sur chaque série (quand disponible) pour accéder rapidement à sa fiche complète.",
+        ],
+    },
+    {
         version: '1.6.8',
         date: '2026-07-22',
         changes: [

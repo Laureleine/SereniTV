@@ -871,6 +871,25 @@ nav {
     margin-top: -4px;
 }
 
+.serie-imdb-link {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #f5c518;
+    border: 1px solid rgba(245, 197, 24, 0.4);
+    background: rgba(245, 197, 24, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    align-self: flex-start;
+    margin-top: 4px;
+    text-decoration: none;
+    width: fit-content;
+}
+
+.serie-imdb-link:hover {
+    background: rgba(245, 197, 24, 0.2);
+}
+
 /* ── Filtres de Plateforme ── */
 .platform-filters {
     display: flex;

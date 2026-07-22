@@ -47,7 +47,7 @@ function mapperStatutTMDB(tmdbStatus: string) {
 }
 
 async function fetchTMDB(tmdbId: number) {
-  const url = `${TMDB_BASE_URL}/tv/${tmdbId}?language=fr-FR&append_to_response=watch/providers`;
+  const url = `${TMDB_BASE_URL}/tv/${tmdbId}?language=fr-FR&append_to_response=watch/providers,external_ids`;
   const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
@@ -95,6 +95,7 @@ async function fetchTMDB(tmdbId: number) {
     statut_production: mapperStatutTMDB(d.status),
     plateforme: detectedPlatform,
     watch_url: watchUrl,
+    imdb_id: d.external_ids?.imdb_id || null,
     saisons: (d.seasons || [])
       .filter((s: any) => s.season_number > 0)
       .map((s: any) => ({
@@ -138,6 +139,7 @@ Deno.serve(async (req: Request) => {
           statut_production: tmdb.statut_production,
           plateforme: tmdb.plateforme,
           watch_url: tmdb.watch_url,
+          imdb_id: tmdb.imdb_id,
           derniere_maj_tmdb: now,
         },
         { onConflict: 'tmdb_id' }
