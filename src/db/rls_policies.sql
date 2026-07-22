@@ -151,3 +151,12 @@ CREATE POLICY "retours_commentaires_insert_owner"
     ON retours_commentaires FOR INSERT
     TO authenticated
     WITH CHECK (auth.uid() = 'e062f101-98f4-4d4f-818f-134add366f28'::uuid AND auteur = 'utilisateur');
+
+-- ── 10. Import automatique hebdomadaire (interne) ───────────────────────────
+-- series.est_nouveaute : flag additif posé par l'Edge Function import-hebdomadaire
+-- (colonne couverte par la policy de lecture publique existante sur `series`,
+-- section 2 — aucune policy dédiée nécessaire).
+-- import_auto_etat : simple curseur de pagination TMDB entre deux exécutions
+-- hebdomadaires. Aucun accès client (ni anon, ni authenticated) : RLS activé
+-- sans policy, accès réservé au service_role de l'Edge Function.
+ALTER TABLE import_auto_etat ENABLE ROW LEVEL SECURITY;

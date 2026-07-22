@@ -7,6 +7,14 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.0',
+        date: '2026-07-22',
+        changes: [
+            "Nouvel onglet « Nouveautés » : chaque semaine, les séries qui viennent de sortir sont importées automatiquement dans cet onglet dédié.",
+            "En parallèle, 100 séries plus anciennes (parmi les plus populaires) sont ajoutées chaque semaine à l'Inbox, pour enrichir progressivement le catalogue.",
+        ],
+    },
+    {
         version: '1.6.10',
         date: '2026-07-22',
         changes: [

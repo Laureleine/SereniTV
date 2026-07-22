@@ -188,7 +188,7 @@ export function updateRemoteDeckVisibility(seriesCount) {
     if (!remoteDeck) return;
 
     const activeNavBtn = document.querySelector('.nav-btn.active');
-    const isInboxTab = activeNavBtn && activeNavBtn.dataset.filter === 'all';
+    const isInboxTab = activeNavBtn && (activeNavBtn.dataset.filter === 'all' || activeNavBtn.dataset.filter === 'nouveautes');
 
     // Si on est en mode télécommande OU (mode PC et onglet Inbox avec des séries)
     const shouldShow = state.currentMode === 'remote' || (state.currentMode === 'pc' && isInboxTab && seriesCount > 0);

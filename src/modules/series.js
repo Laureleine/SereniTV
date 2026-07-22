@@ -384,9 +384,11 @@ function melangerAleatoirement(array) {
 export function applyFilters() {
     let filtered = seriesData;
 
-    // 1. Filtrer par statut de visionnage (Toutes = Inbox / non classées)
+    // 1. Filtrer par statut de visionnage (Toutes = Inbox / non classées, hors Nouveautés)
     if (currentStatusFilter === 'all') {
-        filtered = filtered.filter(s => s.statut_visionnage === null);
+        filtered = filtered.filter(s => s.statut_visionnage === null && !s.est_nouveaute);
+    } else if (currentStatusFilter === 'nouveautes') {
+        filtered = filtered.filter(s => s.statut_visionnage === null && s.est_nouveaute);
     } else {
         const map = {
             'en-cours':    'En cours',
