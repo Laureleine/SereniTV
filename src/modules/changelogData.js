@@ -7,6 +7,15 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.4.1',
+        date: '2026-07-22',
+        changes: [
+            "Sécurité : fermeture d'une faille permettant d'injecter du code via un titre de série.",
+            "Correction : en cas d'échec d'enregistrement d'un statut (coupure réseau), la série ne disparaît plus silencieusement — un message d'erreur s'affiche et rien n'est perdu.",
+            "Accessibilité : le panneau des saisons de chaque carte s'ouvre désormais aussi au clavier, les fenêtres de confirmation se ferment avec Échap et remettent le focus à leur place, et le zoom n'est plus bloqué sur mobile.",
+        ],
+    },
+    {
         version: '1.4.0',
         date: '2026-07-22',
         changes: [

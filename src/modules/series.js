@@ -344,6 +344,8 @@ export function updateLocalSeriesStatus(serieId, statut) {
 }
 
 export async function updateStatutGlobal(serieId, statutGlobal, userId = getCurrentUserId()) {
+    const statutPrecedent = seriesData.find(s => s.id === serieId)?.statut_visionnage ?? null;
+
     try {
         console.log(`[STATUT] updateStatutGlobal — serie_id=${serieId}, statut=${statutGlobal}, user_id=${userId}`);
 
@@ -364,6 +366,12 @@ export async function updateStatutGlobal(serieId, statutGlobal, userId = getCurr
 
     } catch (error) {
         console.error('[STATUT] Erreur updateStatutGlobal (catch):', error);
+
+        // Rollback : l'écriture a échoué, on annule la mise à jour optimiste
+        // pour ne pas laisser l'état local mentir sur ce qui est réellement enregistré.
+        updateLocalSeriesStatus(serieId, statutPrecedent);
+        applyFilters();
+
         return { success: false, error };
     }
 }

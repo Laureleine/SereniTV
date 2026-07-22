@@ -334,6 +334,11 @@ nav {
     border-color: var(--electric-purp);
 }
 
+.serie-card:focus-visible {
+    outline: 3px solid var(--electric-purp);
+    outline-offset: 2px;
+}
+
 /* Affiche/Poster TMDB */
 .card-poster {
     aspect-ratio: 2 / 3;

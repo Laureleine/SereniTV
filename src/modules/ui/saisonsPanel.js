@@ -15,9 +15,11 @@ export async function toggleSaisonsPanel(serieId, card) {
     if (isOpen) {
         panel.hidden = true;
         card.classList.remove('is-expanded');
+        card.setAttribute('aria-expanded', 'false');
     } else {
         panel.hidden = false;
         card.classList.add('is-expanded');
+        card.setAttribute('aria-expanded', 'true');
 
         if (contentDiv.querySelector('.saisons-loading')) {
             try {

@@ -1,4 +1,5 @@
 import { CHANGELOG, APP_VERSION } from '../changelogData.js';
+import { trapFocus } from './focusTrap.js';
 
 /**
  * Affiche le badge de version et câble l'ouverture/fermeture du panneau
@@ -14,6 +15,7 @@ export function initChangelogBadge() {
     if (!badge || !overlay || !modal || !listEl) return;
 
     badge.textContent = `v${APP_VERSION}`;
+    badge.setAttribute('aria-label', `v${APP_VERSION} — voir les notes de version`);
 
     let rendered = false;
     const renderList = () => {
@@ -32,15 +34,22 @@ export function initChangelogBadge() {
         rendered = true;
     };
 
+    let releaseFocus = null;
+
     const ouvrir = () => {
         renderList();
         overlay.classList.add('is-visible');
         modal.classList.add('is-visible');
+        releaseFocus = trapFocus(modal, fermer);
     };
 
     const fermer = () => {
         overlay.classList.remove('is-visible');
         modal.classList.remove('is-visible');
+        if (releaseFocus) {
+            releaseFocus();
+            releaseFocus = null;
+        }
     };
 
     badge.addEventListener('click', ouvrir);

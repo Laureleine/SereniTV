@@ -1,6 +1,7 @@
 import { fetchSeries } from '../series.js';
 import { getPlayLink } from './playLink.js';
 import { state } from './state.js';
+import { escapeHtml } from './escapeHtml.js';
 
 const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Suivies', 'Terminée', 'Abandonnée', 'Sans intérêt', 'Peut-être'];
 
@@ -74,16 +75,16 @@ export function renderSeries(seriesList) {
         card.innerHTML = `
             <div class="card-poster">
                 ${posterUrl
-                    ? `<img src="${posterUrl}" alt="Affiche de ${activeSerie.titre}" loading="eager">`
+                    ? `<img src="${posterUrl}" alt="Affiche de ${escapeHtml(activeSerie.titre)}" loading="eager">`
                     : `<div class="poster-placeholder"><span>🎬</span></div>`
                 }
             </div>
             <div class="card-content">
                 <div class="card-header">
-                    <h2 class="serie-title">${activeSerie.titre}</h2>
+                    <h2 class="serie-title">${escapeHtml(activeSerie.titre)}</h2>
                 </div>
-                ${activeSerie.plateforme ? `<div class="serie-platform-badge">${activeSerie.plateforme}</div>` : ''}
-                <p class="serie-synopsis">${activeSerie.synopsis || 'Aucun résumé disponible.'}</p>
+                ${activeSerie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(activeSerie.plateforme)}</div>` : ''}
+                <p class="serie-synopsis">${escapeHtml(activeSerie.synopsis) || 'Aucun résumé disponible.'}</p>
                 ${(() => {
                     const playLink = getPlayLink(activeSerie);
                     return isTvMode ? `
@@ -114,6 +115,10 @@ export function renderSeries(seriesList) {
         const card = document.createElement('div');
         card.className = 'serie-card';
         card.dataset.serieId = serie.id;
+        card.tabIndex = 0;
+        card.setAttribute('role', 'button');
+        card.setAttribute('aria-expanded', 'false');
+        card.setAttribute('aria-label', `Afficher les saisons de ${serie.titre}`);
 
         const posterUrl = serie.affiche_path
             ? `https://image.tmdb.org/t/p/w500${serie.affiche_path}`
@@ -122,23 +127,23 @@ export function renderSeries(seriesList) {
         card.innerHTML = `
             <div class="card-poster">
                 ${posterUrl
-                    ? `<img src="${posterUrl}" alt="Affiche de ${serie.titre}" loading="lazy">`
+                    ? `<img src="${posterUrl}" alt="Affiche de ${escapeHtml(serie.titre)}" loading="lazy">`
                     : `<div class="poster-placeholder"><span>🎬</span></div>`
                 }
             </div>
             <div class="card-content">
                 <div class="card-header">
-                    <h2 class="serie-title">${serie.titre}</h2>
+                    <h2 class="serie-title">${escapeHtml(serie.titre)}</h2>
                 </div>
-                ${serie.plateforme ? `<div class="serie-platform-badge">${serie.plateforme}</div>` : ''}
-                <p class="serie-synopsis">${serie.synopsis || 'Aucun résumé disponible.'}</p>
+                ${serie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(serie.plateforme)}</div>` : ''}
+                <p class="serie-synopsis">${escapeHtml(serie.synopsis) || 'Aucun résumé disponible.'}</p>
                 <div class="card-footer">
                     <select
                         class="statut-select"
                         id="statut-${serie.id}"
                         data-serie-id="${serie.id}"
-                        data-serie-titre="${serie.titre}"
-                        aria-label="Statut de visionnage de ${serie.titre}"
+                        data-serie-titre="${escapeHtml(serie.titre)}"
+                        aria-label="Statut de visionnage de ${escapeHtml(serie.titre)}"
                     >
                         <option value="" disabled ${!serie.statut_visionnage ? 'selected' : ''}>Classer cette série…</option>
                         ${STATUTS_VISIONNAGE.map(s => {

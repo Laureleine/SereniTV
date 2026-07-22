@@ -1,7 +1,9 @@
 import { getSaisonsAvecStatut, abandonnerSerie, demarrerSerie, fetchSeries, getCurrentUserId } from '../series.js';
 import { showToast } from './toast.js';
+import { trapFocus } from './focusTrap.js';
 
 let _modalContext = null;
+let _releaseFocus = null;
 
 /**
  * Ouvre le modal générique (abandon ou démarrage) après avoir chargé les saisons de la série.
@@ -41,6 +43,8 @@ export async function ouvrirModal(config) {
         document.getElementById('modal-overlay').classList.add('is-visible');
         document.getElementById('modal-abandon').classList.add('is-visible');
 
+        _releaseFocus = trapFocus(document.getElementById('modal-abandon'), () => fermerModal(), selectElement);
+
     } catch (err) {
         console.error("[MODAL] Erreur chargement saisons:", err);
         showToast("Impossible de charger les saisons. Veuillez réessayer.");
@@ -55,6 +59,11 @@ export async function ouvrirModal(config) {
 export function fermerModal(annule = true) {
     document.getElementById('modal-overlay').classList.remove('is-visible');
     document.getElementById('modal-abandon').classList.remove('is-visible');
+
+    if (_releaseFocus) {
+        _releaseFocus();
+        _releaseFocus = null;
+    }
 
     if (annule && _modalContext?.selectElement) {
         _modalContext.selectElement.value = '';

@@ -1,4 +1,5 @@
 import { rechercherSeriesTMDB, synchroniserSerieAvecTMDB, fetchSeries, marquerAjoutManuel } from '../series.js';
+import { escapeHtml } from './escapeHtml.js';
 
 const TMDB_POSTER_THUMB = 'https://image.tmdb.org/t/p/w92';
 
@@ -124,9 +125,9 @@ function afficherSuggestions(resultats, suggestions, input, statusEl) {
                 }
             </div>
             <div class="suggestion-info">
-                <span class="suggestion-titre">${r.titre}</span>
-                ${r.titre_orig ? `<span class="suggestion-titre-orig">${r.titre_orig}</span>` : ''}
-                <span class="suggestion-annee">${r.annee}</span>
+                <span class="suggestion-titre">${escapeHtml(r.titre)}</span>
+                ${r.titre_orig ? `<span class="suggestion-titre-orig">${escapeHtml(r.titre_orig)}</span>` : ''}
+                <span class="suggestion-annee">${escapeHtml(r.annee)}</span>
             </div>
             <div class="suggestion-add" aria-hidden="true">+</div>
         `;

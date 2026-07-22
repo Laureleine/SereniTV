@@ -18,6 +18,7 @@ import { onStatutChange, onSaisonStatutChange } from './ui/statusHandlers.js';
 import { initSearchBar } from './ui/searchBar.js';
 import { getSavedMode, saveMode, clearSavedMode } from './ui/deviceMode.js';
 import { initChangelogBadge } from './ui/changelog.js';
+import { showToast } from './ui/toast.js';
 
 // ─────────────────────────────────────────────
 // INITIALISATION
@@ -153,6 +154,22 @@ export function initUI() {
         }
     });
 
+    // Clavier (Entrée/Espace) : même accordéon, pour les utilisateurs clavier/lecteur d'écran
+    container.addEventListener('keydown', (e) => {
+        if (state.currentMode === 'tv' || state.currentMode === 'remote') return;
+        if (e.key !== 'Enter' && e.key !== ' ') return;
+
+        if (e.target.closest('select') || e.target.closest('button') || e.target.closest('.saisons-panel')) {
+            return;
+        }
+
+        const card = e.target.closest('.serie-card');
+        if (card) {
+            e.preventDefault();
+            toggleSaisonsPanel(card.dataset.serieId, card);
+        }
+    });
+
     // Boutons de la télécommande / Zapping mobile (Triage optimiste 0ms)
     const btnNo = document.getElementById('remote-no');
     const btnMaybe = document.getElementById('remote-maybe');
@@ -181,6 +198,7 @@ export function initUI() {
             updateStatutGlobal(id, statut, getCurrentUserId()).then((result) => {
                 if (!result.success) {
                     console.error(`[OPTIMISTE] Échec de l'enregistrement de la série ${id} (${statut})`);
+                    showToast("Échec de l'enregistrement, la série reste à classer.");
                 }
             });
         };
