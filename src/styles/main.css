@@ -633,6 +633,51 @@ nav {
     gap: 12px;
 }
 
+.renouvellement-modal .modal-content {
+    max-height: 80vh;
+}
+
+.renouvellement-liste {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 45vh;
+    overflow-y: auto;
+}
+
+.renouvellement-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+}
+
+.renouvellement-item__titre {
+    font-weight: 600;
+    color: var(--text);
+}
+
+.renouvellement-item__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+}
+
+.renouvellement-item__actions .btn {
+    flex: 1;
+    white-space: nowrap;
+}
+
+.btn--small {
+    padding: 6px 12px;
+    font-size: 0.82rem;
+}
+
 /* Boutons */
 .btn {
     padding: 12px 24px;

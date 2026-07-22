@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.2',
+        date: '2026-07-22',
+        changes: [
+            "Quand une série que vous suivez (ou avez terminée) reçoit une nouvelle saison, une fenêtre le signale désormais et propose de la basculer vers « À voir », au lieu d'un changement automatique et silencieux.",
+        ],
+    },
+    {
         version: '1.7.1',
         date: '2026-07-22',
         changes: [

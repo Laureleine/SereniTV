@@ -301,40 +301,49 @@ export async function updateStatutGlobal(serieId, statutGlobal, userId = getCurr
 
 /**
  * Revérifie auprès de TMDB les séries "Suivies" ou "Terminée" dont le cache
- * date de plus de 7 jours (CACHE_TTL_MS), et bascule automatiquement leur
- * statut :
- *   - Nouvelle saison détectée (Suivies ou Terminée) → "En cours"
- *   - Suivies + production confirmée terminée par TMDB → "Terminée"
+ * date de plus de 7 jours (CACHE_TTL_MS) :
+ *   - Nouvelle saison détectée (Suivies ou Terminée) → ne bascule plus
+ *     automatiquement, remontée dans la liste retournée pour proposer à
+ *     l'utilisateur de basculer vers "À voir" (voir modale dédiée).
+ *   - Suivies + production confirmée terminée par TMDB → "Terminée" (inchangé,
+ *     ne concerne pas une nouvelle saison, pas de confirmation nécessaire).
  * Conçu pour tourner une fois en tâche de fond au démarrage de l'app, sans
  * bloquer l'affichage initial. Chaque série est traitée indépendamment :
  * l'échec de l'une n'empêche pas les autres.
  * @param {string} userId
+ * @returns {Promise<Array<{serieId: number, titre: string, statutActuel: string}>>}
  */
 export async function verifierRenouvellementSaisons(userId = getCurrentUserId()) {
     const seuil = new Date(Date.now() - CACHE_TTL_MS).toISOString();
 
     const { data: candidats, error } = await supabase
         .from('utilisateur_series')
-        .select('serie_id, statut_visionnage, series!inner(tmdb_id, derniere_maj_tmdb)')
+        .select('serie_id, statut_visionnage, series!inner(tmdb_id, titre, derniere_maj_tmdb)')
         .eq('user_id', userId)
         .in('statut_visionnage', ['Suivies', 'Terminée'])
         .lt('series.derniere_maj_tmdb', seuil);
 
     if (error) {
         console.error('[RENOUVELLEMENT] Erreur recherche des candidats:', error);
-        return;
+        return [];
     }
-    if (!candidats || candidats.length === 0) return;
+    if (!candidats || candidats.length === 0) return [];
 
     console.log(`[RENOUVELLEMENT] ${candidats.length} série(s) à revérifier auprès de TMDB…`);
+
+    const nouvellesSaisons = [];
 
     await Promise.allSettled(candidats.map(async (c) => {
         try {
             const tmdb = await synchroniserSerieAvecTMDB(c.series.tmdb_id);
 
             if (tmdb.nouvelleSaisonDetectee) {
-                await updateStatutGlobal(c.serie_id, 'En cours', userId);
-                console.log(`[RENOUVELLEMENT] ✓ Nouvelle saison détectée pour serie_id=${c.serie_id} → En cours.`);
+                nouvellesSaisons.push({
+                    serieId: c.serie_id,
+                    titre: c.series.titre,
+                    statutActuel: c.statut_visionnage,
+                });
+                console.log(`[RENOUVELLEMENT] ✓ Nouvelle saison détectée pour serie_id=${c.serie_id}.`);
             } else if (c.statut_visionnage === 'Suivies' && tmdb.statut_production === 'Terminée') {
                 await updateStatutGlobal(c.serie_id, 'Terminée', userId);
                 console.log(`[RENOUVELLEMENT] ✓ Série définitivement terminée pour serie_id=${c.serie_id} → Terminée.`);
@@ -343,6 +352,8 @@ export async function verifierRenouvellementSaisons(userId = getCurrentUserId())
             console.warn(`[RENOUVELLEMENT] Échec pour tmdb_id=${c.series.tmdb_id}:`, err.message);
         }
     }));
+
+    return nouvellesSaisons;
 }
 
 // ─────────────────────────────────────────────

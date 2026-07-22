@@ -2,6 +2,7 @@ import { initUI } from './modules/ui.js';
 import { fetchSeries, verifierRenouvellementSaisons } from './modules/series.js';
 import { initAuth } from './modules/ui/auth.js';
 import { initChangelogModal } from './modules/ui/changelog.js';
+import { afficherPopupNouvellesSaisons } from './modules/ui/renouvellement.js';
 
 // Enregistrement du Service Worker
 const SERVICE_WORKER_URL = new URL('/service-worker.js', location.origin).href;
@@ -48,8 +49,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Revérification des séries "Suivies"/"Terminée" en tâche de fond
         // (ne bloque pas l'affichage initial)
-        verifierRenouvellementSaisons().catch(e =>
-            console.error("Erreur lors de la vérification de renouvellement:", e)
-        );
+        verifierRenouvellementSaisons()
+            .then(nouvellesSaisons => afficherPopupNouvellesSaisons(nouvellesSaisons))
+            .catch(e => console.error("Erreur lors de la vérification de renouvellement:", e));
     });
 });
