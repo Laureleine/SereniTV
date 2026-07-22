@@ -1,10 +1,16 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+const ALLOWED_ORIGINS = ['https://sereni-tv.vercel.app'];
+
+function corsHeadersFor(req: Request): Record<string, string> {
+  const origin = req.headers.get('Origin') || '';
+  const isAllowed = ALLOWED_ORIGINS.includes(origin) || /^http:\/\/localhost:\d+$/.test(origin);
+  return {
+    'Access-Control-Allow-Origin': isAllowed ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  };
+}
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
@@ -17,7 +23,7 @@ const supabase = createClient(
 const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Suivies', 'Terminée', 'Abandonnée', 'Peut-être', 'Sans intérêt'];
 const STATUTS_SAISON = ['Pas commencée', 'En cours', 'Terminée'];
 
-function jsonResponse(body: unknown, status = 200) {
+function jsonResponse(corsHeaders: Record<string, string>, body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -39,13 +45,15 @@ async function getAuthenticatedUserId(req: Request): Promise<string | null> {
 }
 
 Deno.serve(async (req: Request) => {
+  const corsHeaders = corsHeadersFor(req);
+
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   const userId = await getAuthenticatedUserId(req);
   if (!userId) {
-    return jsonResponse({ error: 'unauthorized' }, 401);
+    return jsonResponse(corsHeaders, { error: 'unauthorized' }, 401);
   }
 
   try {
@@ -57,20 +65,20 @@ Deno.serve(async (req: Request) => {
         const saisonId = parseInt(body.saisonId);
         const statut = body.statut;
         if (!saisonId || !STATUTS_SAISON.includes(statut)) {
-          return jsonResponse({ error: 'paramètres invalides' }, 400);
+          return jsonResponse(corsHeaders, { error: 'paramètres invalides' }, 400);
         }
         const { error } = await supabase
           .from('utilisateur_saisons')
           .upsert({ user_id: userId, saison_id: saisonId, statut_saison: statut }, { onConflict: 'user_id, saison_id' });
         if (error) throw error;
-        return jsonResponse({ success: true });
+        return jsonResponse(corsHeaders, { success: true });
       }
 
       case 'update_statut_global': {
         const serieId = parseInt(body.serieId);
         const statut = body.statut;
         if (!serieId || !STATUTS_VISIONNAGE.includes(statut)) {
-          return jsonResponse({ error: 'paramètres invalides' }, 400);
+          return jsonResponse(corsHeaders, { error: 'paramètres invalides' }, 400);
         }
         const { error } = await supabase
           .from('utilisateur_series')
@@ -79,7 +87,7 @@ Deno.serve(async (req: Request) => {
             { onConflict: 'user_id, serie_id' }
           );
         if (error) throw error;
-        return jsonResponse({ success: true });
+        return jsonResponse(corsHeaders, { success: true });
       }
 
       case 'apply_saisons_statuts': {
@@ -89,7 +97,7 @@ Deno.serve(async (req: Request) => {
         const statutSaisonPivot = body.statutSaisonPivot || 'En cours';
 
         if (!serieId || !numeroSaison || !STATUTS_VISIONNAGE.includes(statutGlobal) || !STATUTS_SAISON.includes(statutSaisonPivot)) {
-          return jsonResponse({ error: 'paramètres invalides' }, 400);
+          return jsonResponse(corsHeaders, { error: 'paramètres invalides' }, 400);
         }
 
         const { data: saisons, error: saisonsError } = await supabase
@@ -99,7 +107,7 @@ Deno.serve(async (req: Request) => {
           .order('numero_saison');
         if (saisonsError) throw saisonsError;
         if (!saisons || saisons.length === 0) {
-          return jsonResponse({ error: 'Aucune saison trouvée' }, 404);
+          return jsonResponse(corsHeaders, { error: 'Aucune saison trouvée' }, 404);
         }
 
         const saisonsPayload = saisons.map((s: any) => ({
@@ -124,13 +132,13 @@ Deno.serve(async (req: Request) => {
           );
         if (serieError) throw serieError;
 
-        return jsonResponse({ success: true });
+        return jsonResponse(corsHeaders, { success: true });
       }
 
       default:
-        return jsonResponse({ error: 'action inconnue' }, 400);
+        return jsonResponse(corsHeaders, { error: 'action inconnue' }, 400);
     }
   } catch (err) {
-    return jsonResponse({ error: err.message }, 500);
+    return jsonResponse(corsHeaders, { error: err.message }, 500);
   }
 });

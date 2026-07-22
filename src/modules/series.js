@@ -290,8 +290,6 @@ export async function updateStatutGlobal(serieId, statutGlobal, userId = getCurr
     const statutPrecedent = seriesData.find(s => s.id === serieId)?.statut_visionnage ?? null;
 
     try {
-        console.log(`[STATUT] updateStatutGlobal — serie_id=${serieId}, statut=${statutGlobal}, user_id=${userId}`);
-
         // 1. Mise à jour immédiate optimiste de l'état local en mémoire
         updateLocalSeriesStatus(serieId, statutGlobal);
         applyFilters();
@@ -578,7 +576,6 @@ export function initRealtimeZapping(callback, onLaunchNetflix, onPreviewSeries) 
                 table: 'utilisateur_series'
             },
             async (payload) => {
-                console.log('[REALTIME] Changement détecté dans utilisateur_series:', payload);
                 // On recharge les séries locales pour avoir la donnée fraîche
                 await fetchSeries();
                 // On notifie le callback (l'UI)
@@ -593,7 +590,6 @@ export function initRealtimeZapping(callback, onLaunchNetflix, onPreviewSeries) 
                 table: 'series'
             },
             async (payload) => {
-                console.log('[REALTIME] Changement détecté dans series:', payload);
                 // On recharge les séries locales pour avoir la donnée fraîche
                 await fetchSeries();
                 // On notifie le callback (l'UI)
