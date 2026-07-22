@@ -1,4 +1,4 @@
-import { updateStatutUneSaison, updateStatutGlobal, aDejaUnSuiviSaisons, fetchSeries, MOCK_USER_ID } from '../series.js';
+import { updateStatutUneSaison, updateStatutGlobal, aDejaUnSuiviSaisons, fetchSeries, getCurrentUserId } from '../series.js';
 import { showToast } from './toast.js';
 import { ouvrirModal } from './modal.js';
 
@@ -12,7 +12,7 @@ export async function onSaisonStatutChange(event) {
 
     select.disabled = true;
     try {
-        const result = await updateStatutUneSaison(saisonId, statut, MOCK_USER_ID);
+        const result = await updateStatutUneSaison(saisonId, statut, getCurrentUserId());
         if (!result.success) {
             showToast("Erreur lors de la mise à jour de la saison.");
         }
@@ -55,7 +55,7 @@ export async function onStatutChange(event) {
 }
 
 async function handleStatutSimple(serieId, statut, selectElement) {
-    const result = await updateStatutGlobal(serieId, statut, MOCK_USER_ID);
+    const result = await updateStatutGlobal(serieId, statut, getCurrentUserId());
     if (result.success) {
         await fetchSeries();
     } else {
@@ -78,11 +78,11 @@ async function handleAbandonnee(serieId, serieTitre, selectElement) {
 }
 
 async function handleEnCours(serieId, serieTitre, selectElement) {
-    const dejaUnSuivi = await aDejaUnSuiviSaisons(serieId, MOCK_USER_ID);
+    const dejaUnSuivi = await aDejaUnSuiviSaisons(serieId, getCurrentUserId());
 
     if (dejaUnSuivi) {
         console.log(`[UI] Reprise de la série ${serieId} — statuts de saisons préservés.`);
-        const result = await updateStatutGlobal(serieId, 'En cours', MOCK_USER_ID);
+        const result = await updateStatutGlobal(serieId, 'En cours', getCurrentUserId());
         if (result.success) {
             await fetchSeries();
         } else {

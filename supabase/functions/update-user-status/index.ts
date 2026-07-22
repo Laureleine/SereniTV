@@ -3,13 +3,14 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-app-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const APP_SHARED_SECRET = Deno.env.get('APP_SHARED_SECRET');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
 const supabase = createClient(
-  Deno.env.get('SUPABASE_URL')!,
+  SUPABASE_URL,
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
@@ -23,22 +24,33 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+// Vérifie le JWT de la requête auprès de Supabase Auth : le userId vient
+// désormais TOUJOURS du token vérifié, jamais du corps de la requête
+// (sinon n'importe quel appelant authentifié pourrait écrire pour un autre user_id).
+async function getAuthenticatedUserId(req: Request): Promise<string | null> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return null;
+  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data, error } = await authClient.auth.getUser();
+  if (error || !data.user) return null;
+  return data.user.id;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  if (APP_SHARED_SECRET && req.headers.get('x-app-secret') !== APP_SHARED_SECRET) {
+  const userId = await getAuthenticatedUserId(req);
+  if (!userId) {
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 
   try {
     const body = await req.json();
-    const { action, userId } = body;
-
-    if (!userId || typeof userId !== 'string') {
-      return jsonResponse({ error: 'userId manquant' }, 400);
-    }
+    const { action } = body;
 
     switch (action) {
       case 'update_saison_statut': {

@@ -7,9 +7,17 @@
 --     uniquement via les Edge Functions (service_role, qui contourne RLS).
 --
 --   • Tables Utilisateur (utilisateur_series, utilisateur_saisons) :
---     Lecture publique (identité partagée MOCK_USER_ID, pas d'auth réelle —
---     voir supabase/functions/). Écriture : AUCUNE policy anon — uniquement
---     via l'Edge Function update-user-status (service_role).
+--     Lecture réservée au propriétaire réel (auth.uid() = user_id), via un
+--     compte Supabase Auth partagé unique. Écriture : AUCUNE policy
+--     anon/authenticated — uniquement via l'Edge Function update-user-status
+--     (service_role), qui dérive elle-même le user_id du JWT vérifié (jamais
+--     du corps de la requête).
+--
+--   Les 3 Edge Functions (tmdb-search, sync-serie, update-user-status)
+--   vérifient chacune le JWT de la requête auprès de Supabase Auth avant
+--   toute action — il n'existe plus de secret partagé côté client (un secret
+--   envoyé par le navigateur est par nature toujours extractible du bundle JS,
+--   donc jamais réellement secret).
 --
 --   Ne PAS réintroduire de policy "FOR ALL ... USING (true)" sur les tables
 --   utilisateur ou catalogue : c'est exactement la faille qui a été corrigée
@@ -50,19 +58,16 @@ CREATE POLICY "series_themes_select_pub"
 -- Les upserts (sync-serie) passent par l'Edge Function avec service_role,
 -- qui contourne RLS. Ne pas ajouter de policy d'écriture ici.
 
--- ── 4. Suivi utilisateur : Lecture publique ─────────────────────────────────
--- (identité partagée MOCK_USER_ID en attendant une authentification réelle —
--- accepté comme risque mineur : ces tables ne contiennent que des statuts de
--- visionnage, rien de sensible)
-CREATE POLICY "user_series_select_public"
+-- ── 4. Suivi utilisateur : Lecture réservée au propriétaire réel ───────────
+CREATE POLICY "user_series_select_own"
     ON utilisateur_series FOR SELECT
-    TO anon, authenticated
-    USING (true);
+    TO authenticated
+    USING (auth.uid() = user_id);
 
-CREATE POLICY "user_saisons_select_public"
+CREATE POLICY "user_saisons_select_own"
     ON utilisateur_saisons FOR SELECT
-    TO anon, authenticated
-    USING (true);
+    TO authenticated
+    USING (auth.uid() = user_id);
 
 -- ── 5. Suivi utilisateur : écriture — PAS de policy anon/authenticated ─────
 -- Tous les changements de statut passent par l'Edge Function

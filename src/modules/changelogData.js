@@ -7,6 +7,14 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.4.0',
+        date: '2026-07-22',
+        changes: [
+            "Écran de connexion : l'application nécessite désormais un vrai compte. Une seule connexion par appareil, ensuite mémorisée automatiquement.",
+            "Sécurité : fermeture d'une faille où n'importe qui pouvait extraire du code de l'application un accès direct en lecture/écriture à la base de données, en contournant l'application elle-même.",
+        ],
+    },
+    {
         version: '1.3.0',
         date: '2026-07-20',
         changes: [

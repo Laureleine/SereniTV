@@ -1,4 +1,4 @@
-import { getSaisonsAvecStatut, MOCK_USER_ID } from '../series.js';
+import { getSaisonsAvecStatut, getCurrentUserId } from '../series.js';
 
 /**
  * Ouvre/ferme le panneau des saisons d'une carte série, en chargeant les
@@ -21,7 +21,7 @@ export async function toggleSaisonsPanel(serieId, card) {
 
         if (contentDiv.querySelector('.saisons-loading')) {
             try {
-                const saisons = await getSaisonsAvecStatut(serieId, MOCK_USER_ID);
+                const saisons = await getSaisonsAvecStatut(serieId, getCurrentUserId());
                 renderSaisonsList(contentDiv, saisons);
             } catch (err) {
                 console.error("Erreur chargement saisons:", err);

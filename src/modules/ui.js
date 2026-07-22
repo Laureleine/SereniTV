@@ -8,7 +8,7 @@ import {
     initRealtimeZapping,
     diffuserSignalLancement,
     diffuserSignalPreview,
-    MOCK_USER_ID,
+    getCurrentUserId,
 } from './series.js';
 import { state } from './ui/state.js';
 import { renderSeries } from './ui/catalogRender.js';
@@ -178,7 +178,7 @@ export function initUI() {
             }
 
             // 3. Enregistrement asynchrone en arrière-plan sans bloquer
-            updateStatutGlobal(id, statut, MOCK_USER_ID).then((result) => {
+            updateStatutGlobal(id, statut, getCurrentUserId()).then((result) => {
                 if (!result.success) {
                     console.error(`[OPTIMISTE] Échec de l'enregistrement de la série ${id} (${statut})`);
                 }

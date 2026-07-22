@@ -1,4 +1,4 @@
-import { getSaisonsAvecStatut, abandonnerSerie, demarrerSerie, fetchSeries, MOCK_USER_ID } from '../series.js';
+import { getSaisonsAvecStatut, abandonnerSerie, demarrerSerie, fetchSeries, getCurrentUserId } from '../series.js';
 import { showToast } from './toast.js';
 
 let _modalContext = null;
@@ -11,7 +11,7 @@ export async function ouvrirModal(config) {
     const { serieId, serieTitre, selectElement, mode, titre, description, labelBtn, finalStatut } = config;
 
     try {
-        const saisons = await getSaisonsAvecStatut(serieId, MOCK_USER_ID);
+        const saisons = await getSaisonsAvecStatut(serieId, getCurrentUserId());
 
         if (!saisons || saisons.length === 0) {
             showToast("Cette série n'a aucune saison enregistrée.");
@@ -79,9 +79,9 @@ export async function onConfirmerModal() {
 
     let result;
     if (mode === 'abandon') {
-        result = await abandonnerSerie(serieId, numeroSaison, MOCK_USER_ID);
+        result = await abandonnerSerie(serieId, numeroSaison, getCurrentUserId());
     } else {
-        result = await demarrerSerie(serieId, numeroSaison, MOCK_USER_ID);
+        result = await demarrerSerie(serieId, numeroSaison, getCurrentUserId());
     }
 
     btnConfirmer.disabled = false;

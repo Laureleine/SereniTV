@@ -1194,6 +1194,41 @@ nav {
     pointer-events: none;
 }
 
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    max-width: 340px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+.auth-input {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-size: 1rem;
+    font-family: inherit;
+    padding: 14px 16px;
+}
+
+.auth-input:focus {
+    outline: none;
+    border-color: var(--electric-purp);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+}
+
+.auth-submit {
+    margin-top: 4px;
+}
+
+.auth-error {
+    color: var(--danger);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
 .mode-selection-content {
     max-width: 900px;
     width: 100%;

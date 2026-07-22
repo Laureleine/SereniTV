@@ -1,5 +1,6 @@
 import { initUI } from './modules/ui.js';
 import { fetchSeries, verifierRenouvellementSaisons } from './modules/series.js';
+import { initAuth } from './modules/ui/auth.js';
 
 // Enregistrement du Service Worker
 const SERVICE_WORKER_URL = new URL('/service-worker.js', location.origin).href;
@@ -29,19 +30,21 @@ if ('serviceWorker' in navigator) {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialiser l'interface utilisateur
-    initUI();
-    
-    // Charger les données
-    try {
-        await fetchSeries();
-    } catch (e) {
-        console.error("Erreur lors du chargement initial:", e);
-    }
+    await initAuth(async () => {
+        // Initialiser l'interface utilisateur
+        initUI();
 
-    // Revérification des séries "Suivies"/"Terminée" en tâche de fond
-    // (ne bloque pas l'affichage initial)
-    verifierRenouvellementSaisons().catch(e =>
-        console.error("Erreur lors de la vérification de renouvellement:", e)
-    );
+        // Charger les données
+        try {
+            await fetchSeries();
+        } catch (e) {
+            console.error("Erreur lors du chargement initial:", e);
+        }
+
+        // Revérification des séries "Suivies"/"Terminée" en tâche de fond
+        // (ne bloque pas l'affichage initial)
+        verifierRenouvellementSaisons().catch(e =>
+            console.error("Erreur lors de la vérification de renouvellement:", e)
+        );
+    });
 });

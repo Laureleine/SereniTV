@@ -46,6 +46,20 @@
         </div>
     </div>
 
+    <!-- ── Écran de connexion (avant tout le reste) ── -->
+    <div id="auth-overlay" class="mode-selection-overlay">
+        <div class="mode-selection-content">
+            <h2 class="mode-selection-title">SéréniTV</h2>
+            <p class="mode-selection-subtitle">Connexion</p>
+            <form id="auth-form" class="auth-form">
+                <input type="email" id="auth-email" class="auth-input" placeholder="Email" autocomplete="username" required>
+                <input type="password" id="auth-password" class="auth-input" placeholder="Mot de passe" autocomplete="current-password" required>
+                <button type="submit" id="auth-submit" class="btn btn--primary auth-submit">Se connecter</button>
+                <p id="auth-error" class="auth-error" role="alert" hidden></p>
+            </form>
+        </div>
+    </div>
+
     <!-- ── Écran de Sélection de Mode (Overlay de démarrage) ── -->
     <div id="mode-selection-overlay" class="mode-selection-overlay">
         <div class="mode-selection-content">

@@ -1,13 +1,15 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-app-secret',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
 const TMDB_BASE_URL = 'https://api.themoviedb.org/3';
 const TMDB_ACCESS_TOKEN = Deno.env.get('TMDB_ACCESS_TOKEN');
-const APP_SHARED_SECRET = Deno.env.get('APP_SHARED_SECRET');
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
+const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY')!;
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -16,12 +18,25 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
+// Vérifie le JWT de la requête auprès de Supabase Auth (au lieu de faire
+// confiance à un secret partagé, forcément visible dans le bundle client).
+async function getAuthenticatedUserId(req: Request): Promise<string | null> {
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader) return null;
+  const authClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const { data, error } = await authClient.auth.getUser();
+  if (error || !data.user) return null;
+  return data.user.id;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
-  if (APP_SHARED_SECRET && req.headers.get('x-app-secret') !== APP_SHARED_SECRET) {
+  if (!(await getAuthenticatedUserId(req))) {
     return jsonResponse({ error: 'unauthorized' }, 401);
   }
 

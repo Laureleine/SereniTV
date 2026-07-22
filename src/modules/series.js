@@ -8,14 +8,16 @@ let seriesData = [];
 // APPEL DES EDGE FUNCTIONS (le token TMDB et les écritures restent côté serveur)
 // ─────────────────────────────────────────────
 const EDGE_FUNCTIONS_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
-const APP_SHARED_SECRET  = import.meta.env.VITE_APP_SHARED_SECRET;
 
 async function callEdgeFunction(name, payload) {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Session expirée, veuillez vous reconnecter.');
+
     const response = await fetch(`${EDGE_FUNCTIONS_URL}/${name}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'x-app-secret': APP_SHARED_SECRET,
+            'Authorization': `Bearer ${session.access_token}`,
         },
         body: JSON.stringify(payload),
     });
@@ -28,8 +30,17 @@ async function callEdgeFunction(name, payload) {
 // Durée du cache local avant re-synchro TMDB
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 jours
 
-// UUID simulé en attendant l'authentification Supabase Auth
-export const MOCK_USER_ID = '00000000-0000-0000-0000-000000000001';
+// Identité de l'utilisateur connecté (Supabase Auth), fixée par setCurrentUserId()
+// après une connexion réussie (voir ui/auth.js).
+let currentUserId = null;
+
+export function setCurrentUserId(id) {
+    currentUserId = id;
+}
+
+export function getCurrentUserId() {
+    return currentUserId;
+}
 
 // ─────────────────────────────────────────────
 // LECTURE DU CATALOGUE
@@ -54,7 +65,7 @@ export async function fetchSeries() {
 
         // Aplatir et filtrer pour l'utilisateur courant sur le client
         seriesData = (data || []).map(s => {
-            const userStatus = (s.utilisateur_series || []).find(us => us.user_id === MOCK_USER_ID);
+            const userStatus = (s.utilisateur_series || []).find(us => us.user_id === getCurrentUserId());
             return {
                 ...s,
                 statut_visionnage: userStatus ? userStatus.statut_visionnage : null,
@@ -166,7 +177,7 @@ export async function getHybridSerieData(tmdbId) {
  * @param {string} userId
  * @returns {Promise<Array>} Tableau de saisons enrichi du statut utilisateur
  */
-export async function getSaisonsAvecStatut(serieId, userId = MOCK_USER_ID) {
+export async function getSaisonsAvecStatut(serieId, userId = getCurrentUserId()) {
     let { data: saisons, error } = await supabase
         .from('saisons')
         .select(`
@@ -220,7 +231,7 @@ export async function getSaisonsAvecStatut(serieId, userId = MOCK_USER_ID) {
  * @param {string} userId
  * @returns {Promise<boolean>}
  */
-export async function aDejaUnSuiviSaisons(serieId, userId = MOCK_USER_ID) {
+export async function aDejaUnSuiviSaisons(serieId, userId = getCurrentUserId()) {
     // Jointure : on cherche des lignes utilisateur_saisons liées aux saisons de cette série
     const { data, error } = await supabase
         .from('utilisateur_saisons')
@@ -244,7 +255,7 @@ export async function aDejaUnSuiviSaisons(serieId, userId = MOCK_USER_ID) {
  * @param {string} userId
  * @returns {Promise<{success: boolean, error?: any}>}
  */
-export async function updateStatutUneSaison(saisonId, statut, userId = MOCK_USER_ID) {
+export async function updateStatutUneSaison(saisonId, statut, userId = getCurrentUserId()) {
     try {
         await callEdgeFunction('update-user-status', { action: 'update_saison_statut', userId, saisonId, statut });
         console.log(`[SAISON] ✓ Saison ${saisonId} → ${statut}`);
@@ -277,7 +288,7 @@ export async function appliquerStatutsSaisons(
     numeroSaison,
     statutGlobal,
     statutSaisonPivot = 'En cours',
-    userId = MOCK_USER_ID
+    userId = getCurrentUserId()
 ) {
     try {
         await callEdgeFunction('update-user-status', {
@@ -302,7 +313,7 @@ export async function appliquerStatutsSaisons(
  * Raccourci : Abandon d'une série.
  * Délègue à appliquerStatutsSaisons avec le statut global 'Abandonnée'.
  */
-export async function abandonnerSerie(serieId, numeroSaison, userId = MOCK_USER_ID) {
+export async function abandonnerSerie(serieId, numeroSaison, userId = getCurrentUserId()) {
     return appliquerStatutsSaisons(serieId, numeroSaison, 'Abandonnée', 'En cours', userId);
 }
 
@@ -310,7 +321,7 @@ export async function abandonnerSerie(serieId, numeroSaison, userId = MOCK_USER_
  * Raccourci : Démarrage d'une nouvelle série "En cours".
  * Délègue à appliquerStatutsSaisons avec le statut global 'En cours'.
  */
-export async function demarrerSerie(serieId, numeroSaison, userId = MOCK_USER_ID) {
+export async function demarrerSerie(serieId, numeroSaison, userId = getCurrentUserId()) {
     return appliquerStatutsSaisons(serieId, numeroSaison, 'En cours', 'En cours', userId);
 }
 
@@ -332,7 +343,7 @@ export function updateLocalSeriesStatus(serieId, statut) {
     }
 }
 
-export async function updateStatutGlobal(serieId, statutGlobal, userId = MOCK_USER_ID) {
+export async function updateStatutGlobal(serieId, statutGlobal, userId = getCurrentUserId()) {
     try {
         console.log(`[STATUT] updateStatutGlobal — serie_id=${serieId}, statut=${statutGlobal}, user_id=${userId}`);
 
@@ -372,7 +383,7 @@ export async function updateStatutGlobal(serieId, statutGlobal, userId = MOCK_US
  * l'échec de l'une n'empêche pas les autres.
  * @param {string} userId
  */
-export async function verifierRenouvellementSaisons(userId = MOCK_USER_ID) {
+export async function verifierRenouvellementSaisons(userId = getCurrentUserId()) {
     const seuil = new Date(Date.now() - CACHE_TTL_MS).toISOString();
 
     const { data: candidats, error } = await supabase
