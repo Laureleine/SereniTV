@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.6.2',
+        date: '2026-07-22',
+        changes: [
+            "Les demandeurs d'accès à la bêta reçoivent désormais un email (via Mailjet) lorsque leur inscription est validée ou refusée, avec un email aux couleurs de SéréniTV.",
+        ],
+    },
+    {
         version: '1.6.1',
         date: '2026-07-22',
         changes: [
