@@ -1,6 +1,6 @@
 import { supabase } from '../../supabase.js';
 import { setCurrentUserId } from '../series.js';
-import { inscrireCompte, getMonProfil } from '../access.js';
+import { inscrireCompte, getMonProfil, enregistrerVisiteLanding } from '../access.js';
 import { ouvrirChangelog } from './changelog.js';
 
 let mode = 'login'; // 'login' | 'signup'
@@ -146,6 +146,11 @@ export async function initAuth(onAuthenticated) {
 
     // ── État initial ──
     const { data: { session } } = await supabase.auth.getSession();
+
+    // Compteur de visites (silencieux, ne bloque jamais l'affichage) : distingue
+    // les visiteurs déjà connus (session active) des autres.
+    enregistrerVisiteLanding(!!session, session?.user?.id ?? null);
+
     if (session) {
         await gererApresConnexion(session.user.id);
     }

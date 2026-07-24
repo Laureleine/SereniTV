@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.3',
+        date: '2026-07-24',
+        changes: [
+            "Panneau admin : compteur de visites de la landing page, avec le détail visiteurs connus / autres.",
+        ],
+    },
+    {
         version: '1.7.2',
         date: '2026-07-22',
         changes: [

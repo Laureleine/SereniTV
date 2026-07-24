@@ -145,6 +145,34 @@ export async function setNotifierNouvellesInscriptions(actif) {
 }
 
 /**
+ * Enregistre une visite de la landing page (silencieux en cas d'échec —
+ * ne doit jamais bloquer ni perturber l'affichage du visiteur).
+ * @param {boolean} connu - true si une session active existe déjà
+ * @param {string|null} userId
+ */
+export async function enregistrerVisiteLanding(connu, userId = null) {
+    const { error } = await supabase.from('landing_visites').insert({ connu, user_id: userId });
+    if (error) console.error('[STATS] Erreur enregistrerVisiteLanding:', error);
+}
+
+/**
+ * Statistiques de visites de la landing page (réservé au propriétaire, RLS).
+ * @returns {Promise<{total: number, connus: number, autres: number}|null>}
+ */
+export async function getStatsVisites() {
+    const { data, error } = await supabase
+        .from('landing_visites')
+        .select('connu');
+    if (error) {
+        console.error('[STATS] Erreur getStatsVisites:', error);
+        return null;
+    }
+    const total = data.length;
+    const connus = data.filter(v => v.connu).length;
+    return { total, connus, autres: total - connus };
+}
+
+/**
  * Liste tous les commentaires de tous les retours (le fil de discussion par
  * carte), visibles par tout compte authentifié.
  */

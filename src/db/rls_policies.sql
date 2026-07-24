@@ -160,3 +160,18 @@ CREATE POLICY "retours_commentaires_insert_owner"
 -- hebdomadaires. Aucun accès client (ni anon, ni authenticated) : RLS activé
 -- sans policy, accès réservé au service_role de l'Edge Function.
 ALTER TABLE import_auto_etat ENABLE ROW LEVEL SECURITY;
+
+-- ── 11. Visites de la landing page (compteur admin) ─────────────────────────
+-- Écriture ouverte à tout visiteur (anon inclus) : une visite doit pouvoir
+-- s'enregistrer avant toute authentification. Lecture réservée au propriétaire.
+ALTER TABLE landing_visites ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "landing_visites_insert_public"
+    ON landing_visites FOR INSERT
+    TO anon, authenticated
+    WITH CHECK (true);
+
+CREATE POLICY "landing_visites_select_owner"
+    ON landing_visites FOR SELECT
+    TO authenticated
+    USING (auth.uid() = 'e062f101-98f4-4d4f-818f-134add366f28'::uuid);

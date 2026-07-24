@@ -1,4 +1,4 @@
-import { fetchFeedback, soumettreFeedback, changerStatutFeedback, fetchProfilsEnAttente, approuverUtilisateur, refuserUtilisateur, estProprietaire, getParametresAdmin, setNotifierNouvellesInscriptions, fetchCommentaires, ajouterCommentaire } from '../access.js';
+import { fetchFeedback, soumettreFeedback, changerStatutFeedback, fetchProfilsEnAttente, approuverUtilisateur, refuserUtilisateur, estProprietaire, getParametresAdmin, setNotifierNouvellesInscriptions, fetchCommentaires, ajouterCommentaire, getStatsVisites } from '../access.js';
 import { escapeHtml } from './escapeHtml.js';
 import { trapFocus } from './focusTrap.js';
 
@@ -223,7 +223,25 @@ async function ouvrirAdmin() {
     const toggle = document.getElementById('admin-toggle-notif');
     if (toggle) toggle.checked = parametres?.notifier_nouvelles_inscriptions ?? true;
 
+    await afficherStatsVisites();
     await rechargerAdmin();
+}
+
+async function afficherStatsVisites() {
+    const conteneur = document.getElementById('admin-stats-visites');
+    if (!conteneur) return;
+
+    const stats = await getStatsVisites();
+    if (!stats) {
+        conteneur.innerHTML = '<p class="admin-empty">Impossible de charger les statistiques.</p>';
+        return;
+    }
+
+    conteneur.innerHTML = `
+        <div class="admin-stat"><span class="admin-stat__valeur">${stats.total}</span><span class="admin-stat__label">Total</span></div>
+        <div class="admin-stat"><span class="admin-stat__valeur">${stats.connus}</span><span class="admin-stat__label">Connus</span></div>
+        <div class="admin-stat"><span class="admin-stat__valeur">${stats.autres}</span><span class="admin-stat__label">Autres</span></div>
+    `;
 }
 
 function fermerAdmin() {
