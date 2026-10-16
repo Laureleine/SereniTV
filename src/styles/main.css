@@ -369,6 +369,68 @@ nav {
     font-size: 3rem;
 }
 
+/* Bandeau cinéma des cartes du catalogue : image paysage, titre et badges
+   posés dessus sur un dégradé sombre (3× moins haut que l'affiche portrait). */
+.card-bandeau {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    background: var(--surface-2);
+    overflow: hidden;
+    border-bottom: 1px solid var(--border);
+}
+
+.card-bandeau img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.4s ease;
+}
+
+/* Repli sur l'affiche portrait : on garde le haut (visages, titre) */
+.card-bandeau img.card-bandeau__affiche {
+    object-position: center 20%;
+}
+
+.serie-card:hover .card-bandeau img {
+    transform: scale(1.05);
+}
+
+.card-bandeau__infos {
+    position: absolute;
+    inset: auto 0 0 0;
+    padding: 36px 14px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: linear-gradient(to top, rgba(9, 11, 22, 0.95) 0%, rgba(9, 11, 22, 0.75) 55%, transparent 100%);
+}
+
+.card-bandeau__infos .serie-title {
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-bandeau__infos .serie-badges {
+    margin-top: 0;
+}
+
+.card-bandeau__infos .serie-badges > * {
+    backdrop-filter: blur(4px);
+}
+
+.card-bandeau + .card-content {
+    padding: 12px 14px 14px;
+    gap: 10px;
+}
+
+.card-bandeau + .card-content .serie-synopsis {
+    -webkit-line-clamp: 3;
+}
+
 /* Contenu textuel de la carte */
 .card-content {
     padding: 20px;

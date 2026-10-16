@@ -149,28 +149,30 @@ export function renderSeries(seriesList) {
         card.setAttribute('aria-expanded', 'false');
         card.setAttribute('aria-label', `Afficher les saisons de ${serie.titre}`);
 
-        const posterUrl = serie.affiche_path
-            ? `https://image.tmdb.org/t/p/w500${serie.affiche_path}`
-            : null;
+        // Bandeau paysage (image de fond TMDB, 3× moins haute que l'affiche
+        // portrait) ; l'affiche recadrée sert de repli pour les rares séries sans.
+        const bandeauUrl = serie.backdrop_path
+            ? `https://image.tmdb.org/t/p/w780${serie.backdrop_path}`
+            : (serie.affiche_path ? `https://image.tmdb.org/t/p/w500${serie.affiche_path}` : null);
 
         card.innerHTML = `
-            <div class="card-poster">
-                ${posterUrl
-                    ? `<img src="${posterUrl}" alt="Affiche de ${escapeHtml(serie.titre)}" loading="lazy">`
+            <div class="card-bandeau">
+                ${bandeauUrl
+                    ? `<img src="${bandeauUrl}" alt="" loading="lazy"${serie.backdrop_path ? '' : ' class="card-bandeau__affiche"'}>`
                     : `<div class="poster-placeholder"><span>🎬</span></div>`
                 }
+                <div class="card-bandeau__infos">
+                    <h2 class="serie-title">${escapeHtml(serie.titre)}</h2>
+                    ${(serie.plateforme || serie.imdb_id || serie.langue_originale || serie.vf_disponible || serie.vostfr_disponible || serie.depart_le) ? `<div class="serie-badges">
+                        ${serie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(serie.plateforme)}</div>` : ''}
+                        ${serie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(serie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
+                        ${badgeLangue(serie)}
+                        ${badgesVersions(serie)}
+                        ${badgeDepart(serie)}
+                    </div>` : ''}
+                </div>
             </div>
             <div class="card-content">
-                <div class="card-header">
-                    <h2 class="serie-title">${escapeHtml(serie.titre)}</h2>
-                </div>
-                ${(serie.plateforme || serie.imdb_id || serie.langue_originale || serie.vf_disponible || serie.vostfr_disponible || serie.depart_le) ? `<div class="serie-badges">
-                    ${serie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(serie.plateforme)}</div>` : ''}
-                    ${serie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(serie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
-                    ${badgeLangue(serie)}
-                    ${badgesVersions(serie)}
-                    ${badgeDepart(serie)}
-                </div>` : ''}
                 <p class="serie-synopsis">${escapeHtml(serie.synopsis) || 'Aucun résumé disponible.'}</p>
                 <div class="serie-themes" data-serie-id="${serie.id}">
                     ${(serie.themes || []).map(t => `
