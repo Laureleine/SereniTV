@@ -3,6 +3,8 @@ import { fetchSeries, verifierRenouvellementSaisons } from './modules/series.js'
 import { initAuth } from './modules/ui/auth.js';
 import { initChangelogModal } from './modules/ui/changelog.js';
 import { afficherPopupNouvellesSaisons } from './modules/ui/renouvellement.js';
+import { afficherNouveautesSiBesoin } from './modules/ui/monCompte.js';
+import { getSavedMode } from './modules/ui/deviceMode.js';
 
 // Enregistrement du Service Worker
 const SERVICE_WORKER_URL = new URL('/service-worker.js', location.origin).href;
@@ -48,9 +50,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         // Revérification des séries "Suivies"/"Terminée" en tâche de fond
-        // (ne bloque pas l'affichage initial)
+        // (ne bloque pas l'affichage initial). La fenêtre « Quoi de neuf » ne
+        // s'affiche que s'il n'y a pas déjà la popup des nouvelles saisons
+        // (sinon elle attend la prochaine ouverture), et jamais en mode télé
+        // (affichage passif, personne pour la fermer).
         verifierRenouvellementSaisons()
-            .then(nouvellesSaisons => afficherPopupNouvellesSaisons(nouvellesSaisons))
+            .then(nouvellesSaisons => {
+                if (nouvellesSaisons?.length) {
+                    afficherPopupNouvellesSaisons(nouvellesSaisons);
+                } else if (getSavedMode() === 'pc' || getSavedMode() === 'remote') {
+                    return afficherNouveautesSiBesoin();
+                }
+            })
             .catch(e => console.error("Erreur lors de la vérification de renouvellement:", e));
     });
 });

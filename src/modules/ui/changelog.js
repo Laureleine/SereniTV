@@ -1,12 +1,10 @@
 import { CHANGELOG, APP_VERSION } from '../changelogData.js';
 import { trapFocus } from './focusTrap.js';
 
-let rendered = false;
 let releaseFocus = null;
 
-function renderList(listEl) {
-    if (rendered) return;
-    listEl.innerHTML = CHANGELOG.map(entry => `
+function renderList(listEl, entrees) {
+    listEl.innerHTML = entrees.map(entry => `
         <div class="changelog-entry">
             <div class="changelog-entry-header">
                 <span class="changelog-entry-version">v${entry.version}</span>
@@ -17,20 +15,23 @@ function renderList(listEl) {
             </ul>
         </div>
     `).join('');
-    rendered = true;
 }
 
 /**
  * Ouvre le panneau des notes de version. Utilisable depuis n'importe où
  * (badge dans l'appli, lien "Changelog" sur la landing page publique).
+ * Avec des options, sert aussi de fenêtre « Quoi de neuf » (seulement les
+ * versions pas encore vues).
  */
-export function ouvrirChangelog() {
+export function ouvrirChangelog({ entrees = CHANGELOG, titre = 'Notes de version' } = {}) {
     const overlay = document.getElementById('changelog-overlay');
     const modal = document.getElementById('changelog-modal');
     const listEl = document.getElementById('changelog-list');
     if (!overlay || !modal || !listEl) return;
 
-    renderList(listEl);
+    const titreEl = document.getElementById('changelog-titre');
+    if (titreEl) titreEl.textContent = titre;
+    renderList(listEl, entrees);
     overlay.classList.add('is-visible');
     modal.classList.add('is-visible');
     releaseFocus = trapFocus(modal, fermerChangelog);
@@ -67,5 +68,5 @@ export function initChangelogBadge() {
     if (!badge) return;
     badge.textContent = `v${APP_VERSION}`;
     badge.setAttribute('aria-label', `v${APP_VERSION} — voir les notes de version`);
-    badge.addEventListener('click', ouvrirChangelog);
+    badge.addEventListener('click', () => ouvrirChangelog());
 }

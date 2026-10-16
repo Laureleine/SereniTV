@@ -175,3 +175,23 @@ CREATE POLICY "landing_visites_select_owner"
     ON landing_visites FOR SELECT
     TO authenticated
     USING (auth.uid() = 'e062f101-98f4-4d4f-818f-134add366f28'::uuid);
+
+-- ── 12. Mon compte : préférences de notification des mises à jour ───────────
+-- Colonnes ajoutées à profils_utilisateurs :
+--   notif_mises_a_jour boolean NOT NULL DEFAULT true  (abonné par défaut)
+--   derniere_version_vue text                          (fenêtre « Quoi de neuf »)
+-- Chaque utilisateur peut modifier SA ligne, mais uniquement ces deux colonnes
+-- (GRANT par colonne) : statut_acces reste hors de portée du client.
+REVOKE UPDATE ON profils_utilisateurs FROM anon, authenticated;
+GRANT UPDATE (notif_mises_a_jour, derniere_version_vue) ON profils_utilisateurs TO authenticated;
+
+CREATE POLICY "profils_update_own_preferences"
+    ON profils_utilisateurs FOR UPDATE
+    TO authenticated
+    USING (auth.uid() = id)
+    WITH CHECK (auth.uid() = id);
+
+-- notifications_mises_a_jour : registre des versions déjà annoncées par email
+-- (Edge Function notifier-mise-a-jour, cron toutes les 15 min). Aucun accès
+-- client : RLS activé sans policy, réservé au service_role.
+ALTER TABLE notifications_mises_a_jour ENABLE ROW LEVEL SECURITY;

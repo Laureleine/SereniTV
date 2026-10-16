@@ -21,6 +21,7 @@ import { initChangelogBadge } from './ui/changelog.js';
 import { showToast } from './ui/toast.js';
 import { initThemeFilter } from './ui/themeFilter.js';
 import { initFeedback } from './ui/feedback.js';
+import { initMonCompte } from './ui/monCompte.js';
 
 // ─────────────────────────────────────────────
 // INITIALISATION
@@ -280,4 +281,7 @@ export function initUI() {
 
     // Feedback (testeurs) + panneau admin (propriétaire uniquement)
     initFeedback();
+
+    // Mon compte (préférences, mot de passe)
+    initMonCompte();
 }

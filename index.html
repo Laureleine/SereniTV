@@ -34,6 +34,7 @@
 
     <!-- ── Accès Feedback (testeurs) / Admin (propriétaire) ── -->
     <button id="btn-open-feedback" class="btn-feedback" aria-label="Feedback" title="Feedback" hidden>💬</button>
+    <button id="btn-open-compte" class="btn-compte" aria-label="Mon compte" title="Mon compte" hidden>👤</button>
     <button id="btn-open-admin" class="btn-admin" aria-label="Administration" title="Administration" hidden>🛠️</button>
 
     <!-- ── Notes de version ── -->
@@ -161,6 +162,31 @@
                     </div>
                 </form>
             </div>
+        </div>
+    </div>
+
+    <!-- ── Panneau Mon compte (tout utilisateur connecté) ── -->
+    <div id="compte-overlay" class="portal portal-overlay hidden">
+        <div class="portal-card" role="dialog" aria-modal="true" aria-labelledby="compte-titre">
+            <h2 id="compte-titre" class="portal-card__title">Mon compte</h2>
+            <p id="compte-email" class="portal-card__subtitle"></p>
+
+            <h3 class="compte-section-titre">Mises à jour</h3>
+            <label class="admin-toggle">
+                <input type="checkbox" id="compte-toggle-notif">
+                Me prévenir des nouveautés de SéréniTV (email + fenêtre « Quoi de neuf »)
+            </label>
+
+            <h3 class="compte-section-titre">Changer mon mot de passe</h3>
+            <form id="compte-mdp-form" class="auth-form">
+                <input type="password" id="compte-mdp-ancien" class="auth-input" placeholder="Mot de passe actuel" autocomplete="current-password" required>
+                <input type="password" id="compte-mdp-nouveau" class="auth-input" placeholder="Nouveau mot de passe" autocomplete="new-password" minlength="6" required>
+                <input type="password" id="compte-mdp-confirmation" class="auth-input" placeholder="Confirmer le nouveau mot de passe" autocomplete="new-password" minlength="6" required>
+                <p id="compte-mdp-message" class="auth-error" role="status" hidden></p>
+                <button type="submit" class="btn portal-btn">Changer le mot de passe</button>
+            </form>
+
+            <button id="compte-fermer" class="btn btn--ghost feedback-close">Fermer</button>
         </div>
     </div>
 

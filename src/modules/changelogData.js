@@ -12,6 +12,8 @@ export const CHANGELOG = [
         changes: [
             "Panneau admin : nouvelle section « Membres » listant toutes les inscriptions déjà traitées (validées ou refusées), avec dates et message de motivation.",
             "Écran de connexion : un petit œil permet d'afficher le mot de passe en clair pendant la saisie, pour vérifier qu'il n'y a pas de faute de frappe.",
+            "Nouveau bouton 👤 « Mon compte » : changer son mot de passe, et s'abonner ou se désabonner des nouveautés de SéréniTV.",
+            "Les abonnés sont prévenus de chaque nouvelle version par email, et par une fenêtre « Quoi de neuf ? » à l'ouverture de l'appli.",
         ],
     },
     {

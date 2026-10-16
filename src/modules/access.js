@@ -161,6 +161,46 @@ export async function setNotifierNouvellesInscriptions(actif) {
     return { success: true };
 }
 
+// ── Mon compte ──
+
+/**
+ * Met à jour les préférences de l'utilisateur connecté. Seules les colonnes
+ * notif_mises_a_jour et derniere_version_vue sont modifiables côté client
+ * (GRANT par colonne + RLS « sa propre ligne »).
+ * @param {{notif_mises_a_jour?: boolean, derniere_version_vue?: string}} champs
+ */
+export async function majMesPreferences(champs) {
+    const { error } = await supabase
+        .from('profils_utilisateurs')
+        .update(champs)
+        .eq('id', getCurrentUserId());
+    if (error) {
+        console.error('[COMPTE] Erreur majMesPreferences:', error);
+        return { success: false, error };
+    }
+    return { success: true };
+}
+
+/**
+ * Change le mot de passe après avoir revérifié l'ancien (empêche un tiers
+ * tombant sur une session ouverte, ex. sur la télé, de le modifier).
+ * @returns {Promise<{success: boolean, message?: string}>}
+ */
+export async function changerMotDePasse(ancien, nouveau) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user?.email) return { success: false, message: 'Session expirée, reconnecte-toi.' };
+
+    const { error: erreurAncien } = await supabase.auth.signInWithPassword({ email: user.email, password: ancien });
+    if (erreurAncien) return { success: false, message: 'Mot de passe actuel incorrect.' };
+
+    const { error } = await supabase.auth.updateUser({ password: nouveau });
+    if (error) {
+        console.error('[COMPTE] Erreur changerMotDePasse:', error);
+        return { success: false, message: error.message || 'Échec du changement de mot de passe.' };
+    }
+    return { success: true };
+}
+
 /**
  * Enregistre une visite de la landing page (silencieux en cas d'échec —
  * ne doit jamais bloquer ni perturber l'affichage du visiteur).
