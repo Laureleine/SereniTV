@@ -2235,6 +2235,49 @@ nav {
     overflow-y: auto;
 }
 
+.compte-aide {
+    font-size: 0.8rem;
+    color: var(--p-text-muted);
+    text-align: left;
+    margin: 0 0 8px;
+}
+
+.compte-ordre-boutons {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.compte-ordre-boutons__item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--p-bg);
+    border: 1px solid var(--p-border);
+    border-radius: var(--p-radius);
+    padding: 4px;
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--p-text);
+}
+
+.compte-ordre-boutons__item button {
+    background: none;
+    border: none;
+    color: var(--p-accent);
+    cursor: pointer;
+    padding: 4px 6px;
+    font-size: 0.8rem;
+}
+
+.compte-ordre-boutons__item button:disabled {
+    opacity: 0.25;
+    cursor: default;
+}
+
 .compte-deconnexion {
     margin-top: 24px;
     color: var(--p-danger);
@@ -2342,6 +2385,11 @@ nav {
     align-items: center;
     min-height: 70vh;
     padding-bottom: 120px; /* Espace pour la télécommande collée en bas */
+}
+
+/* Téléphone : une seule carte à l'écran, le résumé peut être plus long */
+.is-remote-mode .remote-active-card .card-bandeau + .card-content .serie-synopsis {
+    -webkit-line-clamp: 7;
 }
 
 .is-remote-mode .remote-active-card {

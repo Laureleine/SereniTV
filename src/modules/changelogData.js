@@ -7,6 +7,14 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.7',
+        date: '2026-10-16',
+        changes: [
+            "Le bouton ↶ ANNULER passe tout à droite de la télécommande. Et dans 👤 Mon compte, chacun peut maintenant ranger les boutons NON / PEUT-ÊTRE / OUI / ANNULER dans l'ordre de son choix (mémorisé sur tous ses appareils).",
+            "Sur le téléphone, la carte de la série tient entièrement à l'écran au-dessus des boutons : image paysage avec le titre et les badges dessus, résumé et bouton « Lancer » visibles sans faire défiler.",
+        ],
+    },
+    {
         version: '1.7.6',
         date: '2026-10-16',
         changes: [

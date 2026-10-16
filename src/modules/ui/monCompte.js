@@ -3,8 +3,35 @@ import { CHANGELOG, APP_VERSION } from '../changelogData.js';
 import { ouvrirChangelog } from './changelog.js';
 import { entreesNonVues } from './nouveautes.js';
 import { trapFocus } from './focusTrap.js';
+import { escapeHtml } from './escapeHtml.js';
+import { BOUTONS_TELECOMMANDE, normaliserOrdre, deplacerBouton, appliquerOrdreBoutons, ORDRE_PAR_DEFAUT } from './ordreBoutons.js';
 
 let releaseFocus = null;
+let ordreBoutons = [...ORDRE_PAR_DEFAUT];
+
+/** Liste des boutons de la télécommande, chacun avec ses flèches ◀ ▶. */
+function afficherOrdreBoutons() {
+    const liste = document.getElementById('compte-ordre-boutons');
+    if (!liste) return;
+    liste.innerHTML = ordreBoutons.map((id, i) => `
+        <li class="compte-ordre-boutons__item">
+            <button type="button" data-deplacer="${id}" data-sens="-1" aria-label="Déplacer ${escapeHtml(BOUTONS_TELECOMMANDE[id])} vers la gauche" ${i === 0 ? 'disabled' : ''}>◀</button>
+            <span>${escapeHtml(BOUTONS_TELECOMMANDE[id])}</span>
+            <button type="button" data-deplacer="${id}" data-sens="1" aria-label="Déplacer ${escapeHtml(BOUTONS_TELECOMMANDE[id])} vers la droite" ${i === ordreBoutons.length - 1 ? 'disabled' : ''}>▶</button>
+        </li>
+    `).join('');
+}
+
+async function onDeplacerBouton(e) {
+    const bouton = e.target.closest('[data-deplacer]');
+    if (!bouton) return;
+    ordreBoutons = deplacerBouton(ordreBoutons, bouton.dataset.deplacer, Number(bouton.dataset.sens));
+    afficherOrdreBoutons();
+    appliquerOrdreBoutons(ordreBoutons);
+    // Garde le focus sur le même bouton déplacé (navigation clavier)
+    document.querySelector(`[data-deplacer="${bouton.dataset.deplacer}"][data-sens="${bouton.dataset.sens}"]:not(:disabled)`)?.focus();
+    await majMesPreferences({ ordre_boutons_telecommande: ordreBoutons });
+}
 
 /**
  * Câble le bouton flottant « Mon compte » et son panneau (préférences de
@@ -17,6 +44,15 @@ export function initMonCompte() {
 
     btnOpen.hidden = false;
     btnOpen.addEventListener('click', ouvrirMonCompte);
+
+    // Ordre des boutons de la télécommande : par défaut tout de suite (ANNULER
+    // à droite), puis celui enregistré dans le profil dès qu'il est chargé.
+    appliquerOrdreBoutons(ordreBoutons);
+    getMonProfil().then(profil => {
+        ordreBoutons = normaliserOrdre(profil?.ordre_boutons_telecommande);
+        appliquerOrdreBoutons(ordreBoutons);
+    });
+    document.getElementById('compte-ordre-boutons')?.addEventListener('click', onDeplacerBouton);
     document.getElementById('compte-fermer')?.addEventListener('click', fermerMonCompte);
     overlay.addEventListener('click', (e) => { if (e.target === overlay) fermerMonCompte(); });
 
@@ -43,6 +79,8 @@ async function ouvrirMonCompte() {
     if (toggle) toggle.checked = profil?.notif_mises_a_jour ?? true;
     const emailEl = document.getElementById('compte-email');
     if (emailEl) emailEl.textContent = profil?.email ?? '';
+    ordreBoutons = normaliserOrdre(profil?.ordre_boutons_telecommande);
+    afficherOrdreBoutons();
 }
 
 function fermerMonCompte() {

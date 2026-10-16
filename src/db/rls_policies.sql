@@ -204,3 +204,8 @@ ALTER TABLE notifications_mises_a_jour ENABLE ROW LEVEL SECURITY;
 -- appliquer_themes_auto(), elle-même non exécutable par anon/authenticated.
 ALTER TABLE series_mots_cles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE themes_auto ENABLE ROW LEVEL SECURITY;
+
+-- ── 14. Ordre des boutons de la télécommande (Mon compte) ───────────────────
+-- Colonne profils_utilisateurs.ordre_boutons_telecommande text[], modifiable
+-- par l'utilisateur sur sa propre ligne (même policy qu'en section 12).
+GRANT UPDATE (ordre_boutons_telecommande) ON profils_utilisateurs TO authenticated;

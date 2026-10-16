@@ -91,28 +91,49 @@ export function renderSeries(seriesList) {
         card.className = isTvMode ? 'serie-card tv-card' : 'serie-card remote-active-card';
         card.dataset.serieId = activeSerie.id;
 
-        const posterUrl = activeSerie.affiche_path
-            ? `https://image.tmdb.org/t/p/w500${activeSerie.affiche_path}`
-            : null;
-
-        card.innerHTML = `
-            <div class="card-poster">
-                ${posterUrl
-                    ? `<img src="${posterUrl}" alt="Affiche de ${escapeHtml(activeSerie.titre)}" loading="eager">`
-                    : `<div class="poster-placeholder"><span>🎬</span></div>`
-                }
-            </div>
-            <div class="card-content">
-                <div class="card-header">
-                    <h2 class="serie-title">${escapeHtml(activeSerie.titre)}</h2>
-                </div>
-                ${(activeSerie.plateforme || activeSerie.imdb_id || activeSerie.langue_originale || activeSerie.vf_disponible || activeSerie.vostfr_disponible || activeSerie.depart_le) ? `<div class="serie-badges">
+        const badgesHtml = (activeSerie.plateforme || activeSerie.imdb_id || activeSerie.langue_originale || activeSerie.vf_disponible || activeSerie.vostfr_disponible || activeSerie.depart_le) ? `<div class="serie-badges">
                     ${activeSerie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(activeSerie.plateforme)}</div>` : ''}
                     ${activeSerie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(activeSerie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
                     ${badgeLangue(activeSerie)}
                     ${badgesVersions(activeSerie)}
                     ${badgeDepart(activeSerie)}
-                </div>` : ''}
+                </div>` : '';
+
+        // Télé : grande affiche portrait (écran large). Téléphone (télécommande) :
+        // bandeau paysage, pour que toute la carte tienne à l'écran au-dessus
+        // des boutons NON / PEUT-ÊTRE / OUI.
+        const posterUrl = activeSerie.affiche_path
+            ? `https://image.tmdb.org/t/p/w500${activeSerie.affiche_path}`
+            : null;
+        const bandeauUrl = activeSerie.backdrop_path
+            ? `https://image.tmdb.org/t/p/w780${activeSerie.backdrop_path}`
+            : posterUrl;
+        const enteteHtml = isTvMode ? `
+            <div class="card-poster">
+                ${posterUrl
+                    ? `<img src="${posterUrl}" alt="Affiche de ${escapeHtml(activeSerie.titre)}" loading="eager">`
+                    : `<div class="poster-placeholder"><span>🎬</span></div>`
+                }
+            </div>` : `
+            <div class="card-bandeau">
+                ${bandeauUrl
+                    ? `<img src="${bandeauUrl}" alt="" loading="eager"${activeSerie.backdrop_path ? '' : ' class="card-bandeau__affiche"'}>`
+                    : `<div class="poster-placeholder"><span>🎬</span></div>`
+                }
+                <div class="card-bandeau__infos">
+                    <h2 class="serie-title">${escapeHtml(activeSerie.titre)}</h2>
+                    ${badgesHtml}
+                </div>
+            </div>`;
+
+        card.innerHTML = `
+            ${enteteHtml}
+            <div class="card-content">
+                ${isTvMode ? `
+                <div class="card-header">
+                    <h2 class="serie-title">${escapeHtml(activeSerie.titre)}</h2>
+                </div>
+                ${badgesHtml}` : ''}
                 <p class="serie-synopsis">${escapeHtml(activeSerie.synopsis) || 'Aucun résumé disponible.'}</p>
                 ${(() => {
                     const playLink = getPlayLink(activeSerie);
