@@ -1,6 +1,7 @@
 import { supabase } from '../supabase.js';
 import { renderSeries, renderFetchError } from './ui/catalogRender.js';
 import { getSavedSortOrder, saveSortOrder } from './ui/sortOrder.js';
+import { estDansOnglet, compterParOnglet } from './ui/onglets.js';
 import { callEdgeFunction } from './edgeFunctions.js';
 
 let seriesData = [];
@@ -402,34 +403,14 @@ function melangerAleatoirement(array) {
 }
 
 /**
- * Applique de manière combinée les filtres de statut de visionnage, de plateforme,
- * puis le tri choisi.
+ * Applique de manière combinée les filtres (plateforme, thèmes, langue,
+ * version), publie les compteurs des onglets, filtre par onglet de statut,
+ * puis trie.
  */
 export function applyFilters() {
     let filtered = seriesData;
 
-    // 1. Filtrer par statut de visionnage (Toutes = Inbox / non classées, hors Nouveautés)
-    if (currentStatusFilter === 'all') {
-        filtered = filtered.filter(s => s.statut_visionnage === null && !s.est_nouveaute);
-    } else if (currentStatusFilter === 'nouveautes') {
-        filtered = filtered.filter(s => s.statut_visionnage === null && s.est_nouveaute);
-    } else {
-        const map = {
-            'en-cours':    'En cours',
-            'suivies':     'Suivies',
-            'a-voir':      'A voir',
-            'terminees':   'Terminée',
-            'abandonnees': 'Abandonnée',
-            'peut-etre':   'Peut-être',
-            'ignorees':    'Sans intérêt',
-        };
-        const cible = map[currentStatusFilter];
-        if (cible) {
-            filtered = filtered.filter(s => s.statut_visionnage === cible);
-        }
-    }
-
-    // 2. Filtrer par plateforme si sélectionnée
+    // 1. Filtrer par plateforme si sélectionnée
     if (currentPlatformFilter) {
         filtered = filtered.filter(s => s.plateforme && s.plateforme.toLowerCase() === currentPlatformFilter.toLowerCase());
     }
@@ -450,6 +431,11 @@ export function applyFilters() {
     } else if (currentVersionFilter === 'vostfr') {
         filtered = filtered.filter(s => s.vostfr_disponible === true);
     }
+
+    // 2. Compteurs des onglets (avec les filtres ci-dessus, sans celui du statut),
+    // puis filtre par statut de visionnage (onglet actif)
+    document.dispatchEvent(new CustomEvent('onglets:compteurs', { detail: compterParOnglet(filtered) }));
+    filtered = filtered.filter(s => estDansOnglet(s, currentStatusFilter));
 
     // 3. Trier selon le mode choisi
     if (currentSortOrder === 'random') {

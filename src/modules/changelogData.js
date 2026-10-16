@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.6',
+        date: '2026-10-16',
+        changes: [
+            "Le nombre de séries s'affiche sous chaque onglet (Toutes, Nouveautés, En cours…). Il tient compte des autres filtres actifs : avec « Coréen », chaque onglet indique combien de séries coréennes il contient.",
+        ],
+    },
+    {
         version: '1.7.5',
         date: '2026-10-16',
         changes: [

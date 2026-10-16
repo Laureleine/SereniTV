@@ -292,6 +292,20 @@ nav {
     box-shadow: 0 4px 15px rgba(0, 240, 255, 0.25);
 }
 
+/* Nombre de séries sous le libellé de chaque onglet */
+.nav-btn[data-filter] {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    line-height: 1.2;
+}
+
+.nav-btn__nb {
+    font-size: 0.72rem;
+    font-weight: 700;
+    opacity: 0.75;
+}
+
 /* Variante "Abandonnées" : accent corail/rouge distinct */
 .nav-btn--danger {
     color: var(--danger);

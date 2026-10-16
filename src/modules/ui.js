@@ -111,10 +111,11 @@ export function initUI() {
 
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(btn => {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', () => {
+            // btn (et non e.target) : le clic peut tomber sur le compteur intérieur
             navButtons.forEach(b => b.classList.remove('active'));
-            e.target.classList.add('active');
-            filterSeries(e.target.dataset.filter);
+            btn.classList.add('active');
+            filterSeries(btn.dataset.filter);
         });
     });
 
@@ -146,6 +147,19 @@ export function initUI() {
             setLanguageFilter(e.target.value || null);
         });
     }
+
+    // Compteurs sous chaque onglet de statut (recalculés à chaque filtrage)
+    document.addEventListener('onglets:compteurs', (e) => {
+        document.querySelectorAll('.nav-btn[data-filter]').forEach(btn => {
+            let compteur = btn.querySelector('.nav-btn__nb');
+            if (!compteur) {
+                compteur = document.createElement('span');
+                compteur.className = 'nav-btn__nb';
+                btn.appendChild(compteur);
+            }
+            compteur.textContent = e.detail[btn.dataset.filter] ?? '';
+        });
+    });
 
     // Filtre par version disponible en France (VF / VOSTFR)
     document.getElementById('version-filter-select')?.addEventListener('change', (e) => {
