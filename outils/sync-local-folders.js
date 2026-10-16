@@ -44,7 +44,7 @@ const BASE_PATH = process.argv[2];
 
 if (!BASE_PATH) {
     console.error('❌ Veuillez fournir le chemin absolu du dossier à scanner en paramètre.');
-    console.error('Usage: node scratch/sync-local-folders.js "C:\\chemin\\vers\\series"');
+    console.error('Usage: node outils/sync-local-folders.js "C:\\chemin\\vers\\series"');
     process.exit(1);
 }
 
