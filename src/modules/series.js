@@ -375,6 +375,7 @@ let currentStatusFilter = 'all';
 let currentPlatformFilter = null; // 'Netflix' ou null
 let currentThemeFilter = []; // tableau d'ids de thèmes, vide = pas de filtre (logique OU)
 let currentLanguageFilter = null; // code langue originale TMDB ('ko', 'en'…) ou null
+let currentVersionFilter = null; // 'vf' | 'vostfr' | null
 let currentSortOrder = getSavedSortOrder();
 let dernierAjoutManuelId = null;
 
@@ -441,6 +442,13 @@ export function applyFilters() {
     // 2ter. Filtrer par langue originale si sélectionnée
     if (currentLanguageFilter) {
         filtered = filtered.filter(s => s.langue_originale === currentLanguageFilter);
+    }
+
+    // 2quater. Filtrer par version disponible en France (VF / VOSTFR)
+    if (currentVersionFilter === 'vf') {
+        filtered = filtered.filter(s => s.vf_disponible === true);
+    } else if (currentVersionFilter === 'vostfr') {
+        filtered = filtered.filter(s => s.vostfr_disponible === true);
     }
 
     // 3. Trier selon le mode choisi
@@ -516,6 +524,15 @@ export function toggleThemeFilter(themeId) {
  */
 export function setLanguageFilter(code) {
     currentLanguageFilter = code;
+    applyFilters();
+}
+
+/**
+ * Filtre par version disponible en France.
+ * @param {'vf'|'vostfr'|null} version
+ */
+export function setVersionFilter(version) {
+    currentVersionFilter = version;
     applyFilters();
 }
 

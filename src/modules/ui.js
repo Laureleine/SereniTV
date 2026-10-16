@@ -10,6 +10,7 @@ import {
     diffuserSignalPreview,
     getCurrentUserId,
     setLanguageFilter,
+    setVersionFilter,
     getSeriesData,
 } from './series.js';
 import { listerLangues } from './ui/langues.js';
@@ -145,6 +146,11 @@ export function initUI() {
             setLanguageFilter(e.target.value || null);
         });
     }
+
+    // Filtre par version disponible en France (VF / VOSTFR)
+    document.getElementById('version-filter-select')?.addEventListener('change', (e) => {
+        setVersionFilter(e.target.value || null);
+    });
 
     // Tri du catalogue
     const sortOrderSelect = document.getElementById('sort-order-select');

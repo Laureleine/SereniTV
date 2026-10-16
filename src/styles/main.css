@@ -949,6 +949,17 @@ nav {
     margin-top: 0;
 }
 
+.serie-version-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #34d399;
+    border: 1px solid rgba(52, 211, 153, 0.4);
+    background: rgba(52, 211, 153, 0.1);
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: help;
+}
+
 .serie-langue-badge {
     font-size: 0.72rem;
     font-weight: 700;

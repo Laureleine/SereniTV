@@ -16,6 +16,7 @@ export const CHANGELOG = [
             "Cartes des séries : le badge de la plateforme et le lien IMDB sont désormais côte à côte, ce qui laisse plus de place au résumé.",
             "Correction : le catalogue n'affichait que 1 000 séries (les dernières par ordre alphabétique manquaient). Toutes les séries sont désormais chargées.",
             "Langue originale des séries : affichée sur chaque carte (pays d'origine au survol), et nouveau filtre « Langue » à côté du tri.",
+            "VF et VOSTFR : badges sur les cartes et filtre « Version » pour savoir si une série existe en français ou sous-titrée en France (abonnement ou gratuit). Le catalogue est vérifié progressivement, environ 30 séries par jour, en commençant par les nouveautés.",
             "Les abonnés sont prévenus de chaque nouvelle version par email, et par une fenêtre « Quoi de neuf ? » à l'ouverture de l'appli.",
         ],
     },
