@@ -27,23 +27,33 @@ export function getCurrentUserId() {
 export async function fetchSeries() {
     try {
         // LEFT JOIN propre sans filtrage bloquant au niveau PostgREST
-        // pour conserver toutes les lignes parentes (inbox / non classées)
-        const { data, error } = await supabase
-            .from('series')
-            .select(`
-                *,
-                utilisateur_series (
-                    user_id,
-                    statut_visionnage
-                ),
-                series_themes (
-                    theme_id,
-                    themes ( id, nom_theme )
-                )
-            `)
-            .order('titre');
+        // pour conserver toutes les lignes parentes (inbox / non classées).
+        // Chargement par pages : l'API Supabase plafonne chaque réponse à
+        // 1000 lignes, au-delà les séries de fin d'alphabet étaient perdues.
+        const TAILLE_PAGE = 1000;
+        const data = [];
+        for (let debut = 0; ; debut += TAILLE_PAGE) {
+            const { data: page, error } = await supabase
+                .from('series')
+                .select(`
+                    *,
+                    utilisateur_series (
+                        user_id,
+                        statut_visionnage
+                    ),
+                    series_themes (
+                        theme_id,
+                        themes ( id, nom_theme )
+                    )
+                `)
+                .order('titre')
+                .order('id') // ordre total : pagination stable même à titres égaux
+                .range(debut, debut + TAILLE_PAGE - 1);
 
-        if (error) throw error;
+            if (error) throw error;
+            data.push(...page);
+            if (page.length < TAILLE_PAGE) break;
+        }
 
         // Aplatir et filtrer pour l'utilisateur courant sur le client
         seriesData = (data || []).map(s => {

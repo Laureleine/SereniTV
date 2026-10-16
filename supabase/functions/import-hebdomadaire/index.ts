@@ -144,9 +144,20 @@ async function importerSerie(tmdbId: number, estNouveaute: boolean) {
 }
 
 async function getTmdbIdsExistants(): Promise<Set<number>> {
-  const { data, error } = await supabase.from('series').select('tmdb_id');
-  if (error) throw error;
-  return new Set((data || []).map((s: any) => s.tmdb_id));
+  // Par pages : l'API plafonne chaque réponse à 1000 lignes. Sans ça, les
+  // séries au-delà étaient prises pour inconnues et réimportées chaque semaine.
+  const ids = new Set<number>();
+  for (let debut = 0; ; debut += 1000) {
+    const { data, error } = await supabase
+      .from('series')
+      .select('tmdb_id')
+      .order('id')
+      .range(debut, debut + 999);
+    if (error) throw error;
+    (data || []).forEach((s: any) => ids.add(s.tmdb_id));
+    if (!data || data.length < 1000) break;
+  }
+  return ids;
 }
 
 function attendre(ms: number) {
