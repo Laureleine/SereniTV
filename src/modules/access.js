@@ -201,6 +201,11 @@ export async function changerMotDePasse(ancien, nouveau) {
     return { success: true };
 }
 
+export async function seDeconnecter() {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.error('[COMPTE] Erreur seDeconnecter:', error);
+}
+
 /**
  * Enregistre une visite de la landing page (silencieux en cas d'échec —
  * ne doit jamais bloquer ni perturber l'affichage du visiteur).

@@ -2082,6 +2082,11 @@ nav {
     overflow-y: auto;
 }
 
+.compte-deconnexion {
+    margin-top: 24px;
+    color: var(--p-danger);
+}
+
 .compte-section-titre {
     font-size: 0.95rem;
     font-weight: 700;

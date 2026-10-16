@@ -1,4 +1,4 @@
-import { getMonProfil, majMesPreferences, changerMotDePasse } from '../access.js';
+import { getMonProfil, majMesPreferences, changerMotDePasse, seDeconnecter } from '../access.js';
 import { CHANGELOG, APP_VERSION } from '../changelogData.js';
 import { ouvrirChangelog } from './changelog.js';
 import { entreesNonVues } from './nouveautes.js';
@@ -26,6 +26,11 @@ export function initMonCompte() {
     });
 
     document.getElementById('compte-mdp-form')?.addEventListener('submit', onChangerMotDePasse);
+
+    document.getElementById('compte-deconnexion')?.addEventListener('click', async () => {
+        await seDeconnecter();
+        location.reload(); // repart de la landing page, sans état résiduel
+    });
 }
 
 async function ouvrirMonCompte() {
