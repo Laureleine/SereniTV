@@ -13,7 +13,9 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 // est de 1000 requêtes/mois (plafond dur) : on en consomme au plus
 // LOT_PAR_JOUR par jour.
 const INTERNAL_IMPORT_SECRET = Deno.env.get('INTERNAL_IMPORT_SECRET');
-const API_KEY = Deno.env.get('STREAMING_AVAILABILITY_API_KEY');
+// trim() : une clé collée dans le dashboard emporte souvent un espace ou un
+// retour à la ligne, refusés dans un en-tête HTTP.
+const API_KEY = Deno.env.get('STREAMING_AVAILABILITY_API_KEY')?.trim();
 const API_URL = 'https://api.movieofthenight.com/v4/shows';
 
 const LOT_PAR_JOUR = 30; // 30 × 31 jours = 930 < 1000 requêtes/mois
@@ -45,11 +47,17 @@ type Resultat = {
   departService: string | null;
 };
 
-/** Date d'expiration de l'API (timestamp Unix en secondes, ou date texte) → ISO. */
-function versIso(valeur: unknown): string | null {
+/**
+ * Date de départ de l'API (timestamp Unix en secondes) → ISO, ou null si
+ * inconnue. Sans départ prévu, l'API renvoie une date fictive (31/12/2099) :
+ * toute date à plus d'un an est donc ignorée.
+ */
+function dateDepart(valeur: unknown): string | null {
   if (valeur === null || valeur === undefined || valeur === '') return null;
   const date = typeof valeur === 'number' ? new Date(valeur * 1000) : new Date(String(valeur));
-  return Number.isNaN(date.getTime()) ? null : date.toISOString();
+  if (Number.isNaN(date.getTime())) return null;
+  const dansUnAn = Date.now() + 365 * 24 * 60 * 60 * 1000;
+  return date.getTime() > dansUnAn ? null : date.toISOString();
 }
 
 /** null si le quota est épuisé (on arrête le lot), sinon le résultat complet. */
@@ -84,8 +92,8 @@ async function verifierSerie(tmdbId: number, plateformeConnue: string | null): P
     vostfr: offres.some((o: any) => (o.subtitles ?? []).some((s: any) => estFrancais(s.locale))),
     lien: reference?.link ?? null,
     lienService: reference ? nomService(reference) || null : null,
-    departLe: reference ? versIso(reference.expiresOn) : null,
-    departService: reference?.expiresOn ? nomService(reference) || null : null,
+    departLe: reference ? dateDepart(reference.expiresOn) : null,
+    departService: reference && dateDepart(reference.expiresOn) ? nomService(reference) || null : null,
   };
 }
 
@@ -97,9 +105,19 @@ Deno.serve(async (req: Request) => {
     console.warn('[VERSIONS] Secret STREAMING_AVAILABILITY_API_KEY absent, rien à faire.');
     return jsonResponse({ success: false, raison: 'cle_api_absente' });
   }
+  // Caractère hors ASCII (guillemets typographiques, espace insécable…) :
+  // inutile d'essayer, l'en-tête serait refusé pour chaque série.
+  const caractereInvalide = [...API_KEY].findIndex(c => c.charCodeAt(0) < 0x21 || c.charCodeAt(0) > 0x7e);
+  if (caractereInvalide !== -1) {
+    console.error(`[VERSIONS] Clé API invalide : caractère non autorisé en position ${caractereInvalide + 1} sur ${API_KEY.length} (code ${API_KEY.charCodeAt(caractereInvalide)}).`);
+    return jsonResponse({ success: false, raison: 'cle_api_invalide', position: caractereInvalide + 1, longueur: API_KEY.length, code: API_KEY.charCodeAt(caractereInvalide) });
+  }
 
   try {
-    const { data: lot, error } = await supabase.rpc('series_a_verifier', { nb: LOT_PAR_JOUR });
+    // Corps optionnel {nb} pour un passage réduit (tests), jamais au-delà du lot quotidien.
+    const corps = await req.json().catch(() => ({}));
+    const nb = Math.min(Math.max(Number(corps?.nb) || LOT_PAR_JOUR, 1), LOT_PAR_JOUR);
+    const { data: lot, error } = await supabase.rpc('series_a_verifier', { nb });
     if (error) throw error;
 
     let verifiees = 0, echecs = 0, quotaEpuise = false;
