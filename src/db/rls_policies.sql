@@ -195,3 +195,12 @@ CREATE POLICY "profils_update_own_preferences"
 -- (Edge Function notifier-mise-a-jour, cron toutes les 15 min). Aucun accès
 -- client : RLS activé sans policy, réservé au service_role.
 ALTER TABLE notifications_mises_a_jour ENABLE ROW LEVEL SECURITY;
+
+-- ── 13. Thèmes automatiques par mots-clés TMDB ──────────────────────────────
+-- series_mots_cles (mots-clés TMDB de chaque série) et themes_auto (règles :
+-- thème attribué si la série porte au moins un des mots-clés) : aucun accès
+-- client, RLS activé sans policy. Lus/écrits par les Edge Functions
+-- (sync-serie, import-hebdomadaire, completer-mots-cles) via la fonction SQL
+-- appliquer_themes_auto(), elle-même non exécutable par anon/authenticated.
+ALTER TABLE series_mots_cles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE themes_auto ENABLE ROW LEVEL SECURITY;

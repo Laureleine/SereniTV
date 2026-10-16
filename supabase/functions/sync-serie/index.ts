@@ -47,7 +47,7 @@ function mapperStatutTMDB(tmdbStatus: string) {
 }
 
 async function fetchTMDB(tmdbId: number) {
-  const url = `${TMDB_BASE_URL}/tv/${tmdbId}?language=fr-FR&append_to_response=watch/providers,external_ids`;
+  const url = `${TMDB_BASE_URL}/tv/${tmdbId}?language=fr-FR&append_to_response=watch/providers,external_ids,keywords`;
   const response = await fetch(url, {
     headers: {
       'Authorization': `Bearer ${TMDB_ACCESS_TOKEN}`,
@@ -105,6 +105,7 @@ async function fetchTMDB(tmdbId: number) {
         nombre_episodes: s.episode_count,
       })),
     genres: (d.genres || []).map((g: any) => g.name).filter(Boolean),
+    motsCles: (d.keywords?.results || []).map((k: any) => String(k.name).toLowerCase()),
   };
 }
 
@@ -207,6 +208,13 @@ Deno.serve(async (req: Request) => {
           );
       }
     }
+
+    // Mots-clés TMDB conservés + thèmes automatiques (Médical, Policier…),
+    // purement additifs comme les genres ci-dessus.
+    await supabase
+      .from('series_mots_cles')
+      .upsert({ serie_id: serieId, mots_cles: tmdb.motsCles, recu_at: now });
+    await supabase.rpc('appliquer_themes_auto', { p_serie_id: serieId });
 
     const { data: serieComplete, error: reloadError } = await supabase
       .from('series')

@@ -36,7 +36,7 @@ async function tmdbFetch(path: string) {
 }
 
 async function fetchDetailsTMDB(tmdbId: number) {
-  const d = await tmdbFetch(`/tv/${tmdbId}?language=fr-FR&append_to_response=watch/providers,external_ids`);
+  const d = await tmdbFetch(`/tv/${tmdbId}?language=fr-FR&append_to_response=watch/providers,external_ids,keywords`);
 
   const providers = d["watch/providers"]?.results?.FR;
   let detectedPlatform = d.networks?.[0]?.name || null;
@@ -79,6 +79,7 @@ async function fetchDetailsTMDB(tmdbId: number) {
         nombre_episodes: s.episode_count,
       })),
     genres: (d.genres || []).map((g: any) => g.name).filter(Boolean),
+    motsCles: (d.keywords?.results || []).map((k: any) => String(k.name).toLowerCase()),
   };
 }
 
@@ -141,6 +142,12 @@ async function importerSerie(tmdbId: number, estNouveaute: boolean) {
         );
     }
   }
+
+  // Mots-clés TMDB conservés + thèmes automatiques (Médical, Policier…).
+  await supabase
+    .from('series_mots_cles')
+    .upsert({ serie_id: serieId, mots_cles: tmdb.motsCles, recu_at: new Date().toISOString() });
+  await supabase.rpc('appliquer_themes_auto', { p_serie_id: serieId });
 }
 
 async function getTmdbIdsExistants(): Promise<Set<number>> {
