@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.4',
+        date: '2026-10-16',
+        changes: [
+            "Correction des icônes de l'application : elles sont désormais aux bonnes dimensions et au bon format, ce qui fiabilise l'installation sur l'écran d'accueil et allège leur chargement.",
+        ],
+    },
+    {
         version: '1.7.3',
         date: '2026-07-24',
         changes: [
