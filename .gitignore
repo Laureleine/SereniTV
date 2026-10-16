@@ -12,7 +12,7 @@ android.keystore
 *.apk
 *.aab
 *.idsig
-app/build/
+android/app/build/
 build/
 .gradle/
 local.properties

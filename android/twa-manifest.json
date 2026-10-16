@@ -16,7 +16,7 @@
   "iconUrl": "https://sereni-tv.vercel.app/icon-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "C:\\Users\\amara\\-=- Apps -=-\\SéréniTV\\android.keystore",
+    "path": "C:\\Users\\amara\\-=- Apps -=-\\SéréniTV\\android\\android.keystore",
     "alias": "android"
   },
   "appVersionName": "2",
