@@ -11,6 +11,7 @@ export const CHANGELOG = [
         date: '2026-10-16',
         changes: [
             "Panneau admin : nouvelle section « Membres » listant toutes les inscriptions déjà traitées (validées ou refusées), avec dates et message de motivation.",
+            "Écran de connexion : un petit œil permet d'afficher le mot de passe en clair pendant la saisie, pour vérifier qu'il n'y a pas de faute de frappe.",
         ],
     },
     {

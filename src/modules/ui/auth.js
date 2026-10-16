@@ -28,6 +28,17 @@ export async function initAuth(onAuthenticated) {
 
     if (!overlay || !form) return;
 
+    const passwordToggle = document.getElementById('auth-password-toggle');
+    passwordToggle?.addEventListener('click', () => {
+        const visible = passwordInput.type === 'password';
+        passwordInput.type = visible ? 'text' : 'password';
+        passwordToggle.textContent = visible ? '🙈' : '👁️';
+        const label = visible ? 'Masquer le mot de passe' : 'Afficher le mot de passe';
+        passwordToggle.setAttribute('aria-label', label);
+        passwordToggle.title = label;
+        passwordToggle.setAttribute('aria-pressed', String(visible));
+    });
+
     const hideAllPortalScreens = () => {
         landing?.classList.add('hidden');
         overlay.classList.add('hidden');

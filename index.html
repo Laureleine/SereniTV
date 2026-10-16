@@ -91,7 +91,10 @@
             <p id="auth-subtitle" class="portal-card__subtitle">Connexion</p>
             <form id="auth-form" class="auth-form">
                 <input type="email" id="auth-email" class="auth-input" placeholder="Email" autocomplete="username" required>
-                <input type="password" id="auth-password" class="auth-input" placeholder="Mot de passe" autocomplete="current-password" required>
+                <div class="auth-password-wrap">
+                    <input type="password" id="auth-password" class="auth-input" placeholder="Mot de passe" autocomplete="current-password" required>
+                    <button type="button" id="auth-password-toggle" class="auth-password-toggle" aria-label="Afficher le mot de passe" aria-pressed="false" title="Afficher le mot de passe">👁️</button>
+                </div>
                 <textarea id="auth-motivation" class="auth-input auth-textarea" placeholder="Pourquoi souhaitez-vous rejoindre la bêta ? (optionnel)" rows="3" hidden></textarea>
                 <button type="submit" id="auth-submit" class="btn portal-btn">Se connecter</button>
                 <button type="button" id="auth-toggle-mode" class="portal-link-btn">Pas encore de compte ? Rejoindre la bêta</button>
