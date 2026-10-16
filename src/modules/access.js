@@ -56,6 +56,23 @@ export async function fetchProfilsEnAttente() {
     return data || [];
 }
 
+/**
+ * Liste les inscriptions déjà traitées (validées ou refusées), plus récentes
+ * en premier. Réservé au propriétaire (même garantie RLS que ci-dessus).
+ */
+export async function fetchMembres() {
+    const { data, error } = await supabase
+        .from('profils_utilisateurs')
+        .select('*')
+        .neq('statut_acces', 'en_attente')
+        .order('created_at', { ascending: false });
+    if (error) {
+        console.error('[ACCES] Erreur fetchMembres:', error);
+        return [];
+    }
+    return data || [];
+}
+
 export async function approuverUtilisateur(targetUserId) {
     try {
         await callEdgeFunction('manage-user-access', { action: 'approve', targetUserId });

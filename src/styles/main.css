@@ -1909,6 +1909,11 @@ nav {
 }
 
 /* ── Panneau admin ── */
+#admin-overlay .portal-card {
+    max-height: 100%;
+    overflow-y: auto;
+}
+
 .admin-stats {
     display: flex;
     gap: 12px;

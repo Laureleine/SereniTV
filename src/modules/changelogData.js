@@ -7,6 +7,13 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.5',
+        date: '2026-10-16',
+        changes: [
+            "Panneau admin : nouvelle section « Membres » listant toutes les inscriptions déjà traitées (validées ou refusées), avec dates et message de motivation.",
+        ],
+    },
+    {
         version: '1.7.4',
         date: '2026-10-16',
         changes: [

@@ -1,4 +1,4 @@
-import { fetchFeedback, soumettreFeedback, changerStatutFeedback, fetchProfilsEnAttente, approuverUtilisateur, refuserUtilisateur, estProprietaire, getParametresAdmin, setNotifierNouvellesInscriptions, fetchCommentaires, ajouterCommentaire, getStatsVisites } from '../access.js';
+import { fetchFeedback, soumettreFeedback, changerStatutFeedback, fetchProfilsEnAttente, fetchMembres, approuverUtilisateur, refuserUtilisateur, estProprietaire, getParametresAdmin, setNotifierNouvellesInscriptions, fetchCommentaires, ajouterCommentaire, getStatsVisites } from '../access.js';
 import { escapeHtml } from './escapeHtml.js';
 import { trapFocus } from './focusTrap.js';
 
@@ -284,4 +284,29 @@ async function rechargerAdmin() {
             await rechargerAdmin();
         });
     });
+
+    await afficherMembres();
+}
+
+async function afficherMembres() {
+    const liste = document.getElementById('admin-members-list');
+    if (!liste) return;
+
+    const dateFr = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+    const membres = await fetchMembres();
+    liste.innerHTML = membres.length === 0
+        ? '<p class="admin-empty">Aucun membre pour l\'instant.</p>'
+        : membres.map(m => `
+            <div class="admin-list-item">
+                <div class="admin-list-item__info">
+                    <strong>${escapeHtml(m.email)}</strong>
+                    <div class="admin-list-item__motivation">
+                        ${m.statut_acces === 'valide' ? '✅ Validé' : '⛔ Refusé'}
+                        · inscrit le ${dateFr(m.created_at)}
+                        ${m.valide_at ? `· validé le ${dateFr(m.valide_at)}` : ''}
+                    </div>
+                    ${m.motivation ? `<div class="admin-list-item__motivation">« ${escapeHtml(m.motivation)} »</div>` : ''}
+                </div>
+            </div>
+        `).join('');
 }
