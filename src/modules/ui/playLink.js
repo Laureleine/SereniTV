@@ -6,7 +6,9 @@
 export function getPlayLink(serie) {
     const platform = (serie.plateforme || '').toLowerCase();
     const titre = serie.titre || '';
-    const watchUrl = serie.watch_url || '';
+    // Lien direct de l'API Streaming Availability en priorité (contient
+    // l'identifiant de la série), sinon le lien TMDB historique.
+    const watchUrl = serie.lien_plateforme || serie.watch_url || '';
 
     if (platform.includes('netflix')) {
         const match = watchUrl.match(/(?:netflix\.com\/title\/|title\/|netflix:\/\/title\/)([0-9]+)/i);
@@ -53,6 +55,15 @@ export function getPlayLink(serie) {
             url: `https://www.disneyplus.com/search?q=${encodeURIComponent(titre)}`,
             name: 'Disney+',
             class: 'disney'
+        };
+    }
+
+    // Autre plateforme (HBO Max, Apple TV, Paramount+…) : lien direct tel quel
+    if (serie.lien_plateforme) {
+        return {
+            url: serie.lien_plateforme,
+            name: serie.lien_plateforme_service || serie.plateforme || 'la plateforme',
+            class: 'autre'
         };
     }
 

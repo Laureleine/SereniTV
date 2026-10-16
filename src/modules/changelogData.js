@@ -17,6 +17,7 @@ export const CHANGELOG = [
             "Correction : le catalogue n'affichait que 1 000 séries (les dernières par ordre alphabétique manquaient). Toutes les séries sont désormais chargées.",
             "Langue originale des séries : affichée sur chaque carte (pays d'origine au survol), et nouveau filtre « Langue » à côté du tri.",
             "VF et VOSTFR : badges sur les cartes et filtre « Version » pour savoir si une série existe en français ou sous-titrée en France (abonnement ou gratuit). Le catalogue est vérifié progressivement, environ 30 séries par jour, en commençant par les nouveautés.",
+            "Au fil de ces vérifications : annonce « ⏳ Quitte Netflix le … » quand une série va bientôt quitter sa plateforme (en rouge à moins de 14 jours), et le bouton « Lancer » ouvre directement la série sur la plateforme au lieu d'une recherche.",
             "Les abonnés sont prévenus de chaque nouvelle version par email, et par une fenêtre « Quoi de neuf ? » à l'ouverture de l'appli.",
         ],
     },

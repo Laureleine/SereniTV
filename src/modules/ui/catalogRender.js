@@ -3,6 +3,7 @@ import { getPlayLink } from './playLink.js';
 import { state } from './state.js';
 import { escapeHtml } from './escapeHtml.js';
 import { libelleLangue, libellePays } from './langues.js';
+import { annonceDepart } from './depart.js';
 
 /** Badge « langue originale », pays d'origine en infobulle. */
 function badgeLangue(serie) {
@@ -10,6 +11,13 @@ function badgeLangue(serie) {
     const pays = libellePays(serie.pays_origine);
     const titre = `Langue originale${pays ? ` · pays d'origine : ${pays}` : ''}`;
     return `<span class="serie-langue-badge" title="${escapeHtml(titre)}">${escapeHtml(libelleLangue(serie.langue_originale))}</span>`;
+}
+
+/** « Quitte Netflix le 31 décembre » (en rouge à moins de 14 jours). */
+function badgeDepart(serie) {
+    const annonce = annonceDepart(serie);
+    if (!annonce) return '';
+    return `<span class="serie-depart-badge${annonce.urgent ? ' serie-depart-badge--urgent' : ''}">⏳ ${escapeHtml(annonce.texte)}</span>`;
 }
 
 /** Badges VF / VOSTFR (seulement une fois la série vérifiée et la version trouvée). */
@@ -98,11 +106,12 @@ export function renderSeries(seriesList) {
                 <div class="card-header">
                     <h2 class="serie-title">${escapeHtml(activeSerie.titre)}</h2>
                 </div>
-                ${(activeSerie.plateforme || activeSerie.imdb_id || activeSerie.langue_originale || activeSerie.vf_disponible || activeSerie.vostfr_disponible) ? `<div class="serie-badges">
+                ${(activeSerie.plateforme || activeSerie.imdb_id || activeSerie.langue_originale || activeSerie.vf_disponible || activeSerie.vostfr_disponible || activeSerie.depart_le) ? `<div class="serie-badges">
                     ${activeSerie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(activeSerie.plateforme)}</div>` : ''}
                     ${activeSerie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(activeSerie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
                     ${badgeLangue(activeSerie)}
                     ${badgesVersions(activeSerie)}
+                    ${badgeDepart(activeSerie)}
                 </div>` : ''}
                 <p class="serie-synopsis">${escapeHtml(activeSerie.synopsis) || 'Aucun résumé disponible.'}</p>
                 ${(() => {
@@ -155,11 +164,12 @@ export function renderSeries(seriesList) {
                 <div class="card-header">
                     <h2 class="serie-title">${escapeHtml(serie.titre)}</h2>
                 </div>
-                ${(serie.plateforme || serie.imdb_id || serie.langue_originale || serie.vf_disponible || serie.vostfr_disponible) ? `<div class="serie-badges">
+                ${(serie.plateforme || serie.imdb_id || serie.langue_originale || serie.vf_disponible || serie.vostfr_disponible || serie.depart_le) ? `<div class="serie-badges">
                     ${serie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(serie.plateforme)}</div>` : ''}
                     ${serie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(serie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
                     ${badgeLangue(serie)}
                     ${badgesVersions(serie)}
+                    ${badgeDepart(serie)}
                 </div>` : ''}
                 <p class="serie-synopsis">${escapeHtml(serie.synopsis) || 'Aucun résumé disponible.'}</p>
                 <div class="serie-themes" data-serie-id="${serie.id}">

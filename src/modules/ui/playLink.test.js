@@ -43,6 +43,23 @@ describe('getPlayLink', () => {
         });
     });
 
+    it('utilise en priorité le lien direct de la plateforme (API Streaming Availability)', () => {
+        const serie = {
+            plateforme: 'Netflix', titre: 'Breaking Bad',
+            watch_url: 'https://www.themoviedb.org/tv/1396/watch?locale=FR',
+            lien_plateforme: 'https://www.netflix.com/title/70143836/',
+        };
+        expect(getPlayLink(serie).url).toBe('netflix://title/70143836');
+    });
+
+    it('ouvre le lien direct tel quel pour une plateforme sans traitement dédié', () => {
+        const serie = {
+            plateforme: 'HBO', titre: 'The Wire',
+            lien_plateforme: 'https://play.max.com/show/abc', lien_plateforme_service: 'HBO Max',
+        };
+        expect(getPlayLink(serie)).toEqual({ url: 'https://play.max.com/show/abc', name: 'HBO Max', class: 'autre' });
+    });
+
     it('replie sur une recherche Netflix pour une plateforme inconnue ou absente', () => {
         const serie = { plateforme: null, titre: 'Mystère', watch_url: '' };
         expect(getPlayLink(serie)).toEqual({
