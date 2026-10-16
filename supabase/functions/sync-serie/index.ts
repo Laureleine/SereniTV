@@ -96,6 +96,8 @@ async function fetchTMDB(tmdbId: number) {
     plateforme: detectedPlatform,
     watch_url: watchUrl,
     imdb_id: d.external_ids?.imdb_id || null,
+    langue_originale: d.original_language || null,
+    pays_origine: d.origin_country?.[0] || null,
     saisons: (d.seasons || [])
       .filter((s: any) => s.season_number > 0)
       .map((s: any) => ({
@@ -140,6 +142,8 @@ Deno.serve(async (req: Request) => {
           plateforme: tmdb.plateforme,
           watch_url: tmdb.watch_url,
           imdb_id: tmdb.imdb_id,
+          langue_originale: tmdb.langue_originale,
+          pays_origine: tmdb.pays_origine,
           derniere_maj_tmdb: now,
         },
         { onConflict: 'tmdb_id' }

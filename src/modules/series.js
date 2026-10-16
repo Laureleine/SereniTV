@@ -56,6 +56,7 @@ export async function fetchSeries() {
         });
 
         applyFilters();
+        document.dispatchEvent(new CustomEvent('series:chargees'));
     } catch (error) {
         console.error('[FETCH] Erreur fetchSeries:', error);
         renderFetchError();
@@ -363,6 +364,7 @@ export async function verifierRenouvellementSaisons(userId = getCurrentUserId())
 let currentStatusFilter = 'all';
 let currentPlatformFilter = null; // 'Netflix' ou null
 let currentThemeFilter = []; // tableau d'ids de thèmes, vide = pas de filtre (logique OU)
+let currentLanguageFilter = null; // code langue originale TMDB ('ko', 'en'…) ou null
 let currentSortOrder = getSavedSortOrder();
 let dernierAjoutManuelId = null;
 
@@ -424,6 +426,11 @@ export function applyFilters() {
     // 2bis. Filtrer par thème si sélectionné (logique OU : au moins un des thèmes cochés)
     if (currentThemeFilter.length > 0) {
         filtered = filtered.filter(s => (s.themes || []).some(t => currentThemeFilter.includes(t.id)));
+    }
+
+    // 2ter. Filtrer par langue originale si sélectionnée
+    if (currentLanguageFilter) {
+        filtered = filtered.filter(s => s.langue_originale === currentLanguageFilter);
     }
 
     // 3. Trier selon le mode choisi
@@ -491,6 +498,20 @@ export function toggleThemeFilter(themeId) {
         currentThemeFilter = [...currentThemeFilter, themeId];
     }
     applyFilters();
+}
+
+/**
+ * Filtre par langue originale (code TMDB), ou null pour toutes.
+ * @param {string|null} code
+ */
+export function setLanguageFilter(code) {
+    currentLanguageFilter = code;
+    applyFilters();
+}
+
+/** Séries du catalogue (non filtrées), pour construire les options de filtres. */
+export function getSeriesData() {
+    return seriesData;
 }
 
 export function getCurrentThemeFilter() {

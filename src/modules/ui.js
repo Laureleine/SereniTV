@@ -9,7 +9,11 @@ import {
     diffuserSignalLancement,
     diffuserSignalPreview,
     getCurrentUserId,
+    setLanguageFilter,
+    getSeriesData,
 } from './series.js';
+import { listerLangues } from './ui/langues.js';
+import { escapeHtml } from './ui/escapeHtml.js';
 import { state } from './ui/state.js';
 import { renderSeries, updateRemoteDeckVisibility } from './ui/catalogRender.js';
 import { toggleSaisonsPanel } from './ui/saisonsPanel.js';
@@ -124,6 +128,23 @@ export function initUI() {
             setPlatformFilter(platform === 'all' ? null : platform);
         });
     });
+
+    // Filtre par langue originale : options reconstruites à chaque chargement
+    // du catalogue (seules les langues présentes, les plus fréquentes d'abord)
+    const languageSelect = document.getElementById('language-filter-select');
+    if (languageSelect) {
+        document.addEventListener('series:chargees', () => {
+            const choix = languageSelect.value;
+            languageSelect.innerHTML = '<option value="">Toutes</option>' +
+                listerLangues(getSeriesData())
+                    .map(l => `<option value="${escapeHtml(l.code)}">${escapeHtml(l.libelle)} (${l.nb})</option>`)
+                    .join('');
+            languageSelect.value = choix; // conserve la sélection si la langue existe toujours
+        });
+        languageSelect.addEventListener('change', (e) => {
+            setLanguageFilter(e.target.value || null);
+        });
+    }
 
     // Tri du catalogue
     const sortOrderSelect = document.getElementById('sort-order-select');

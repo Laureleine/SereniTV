@@ -2,6 +2,15 @@ import { fetchSeries } from '../series.js';
 import { getPlayLink } from './playLink.js';
 import { state } from './state.js';
 import { escapeHtml } from './escapeHtml.js';
+import { libelleLangue, libellePays } from './langues.js';
+
+/** Badge « langue originale », pays d'origine en infobulle. */
+function badgeLangue(serie) {
+    if (!serie.langue_originale) return '';
+    const pays = libellePays(serie.pays_origine);
+    const titre = `Langue originale${pays ? ` · pays d'origine : ${pays}` : ''}`;
+    return `<span class="serie-langue-badge" title="${escapeHtml(titre)}">${escapeHtml(libelleLangue(serie.langue_originale))}</span>`;
+}
 
 const STATUTS_VISIONNAGE = ['A voir', 'En cours', 'Suivies', 'Terminée', 'Abandonnée', 'Sans intérêt', 'Peut-être'];
 
@@ -83,9 +92,10 @@ export function renderSeries(seriesList) {
                 <div class="card-header">
                     <h2 class="serie-title">${escapeHtml(activeSerie.titre)}</h2>
                 </div>
-                ${(activeSerie.plateforme || activeSerie.imdb_id) ? `<div class="serie-badges">
+                ${(activeSerie.plateforme || activeSerie.imdb_id || activeSerie.langue_originale) ? `<div class="serie-badges">
                     ${activeSerie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(activeSerie.plateforme)}</div>` : ''}
                     ${activeSerie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(activeSerie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
+                    ${badgeLangue(activeSerie)}
                 </div>` : ''}
                 <p class="serie-synopsis">${escapeHtml(activeSerie.synopsis) || 'Aucun résumé disponible.'}</p>
                 ${(() => {
@@ -138,9 +148,10 @@ export function renderSeries(seriesList) {
                 <div class="card-header">
                     <h2 class="serie-title">${escapeHtml(serie.titre)}</h2>
                 </div>
-                ${(serie.plateforme || serie.imdb_id) ? `<div class="serie-badges">
+                ${(serie.plateforme || serie.imdb_id || serie.langue_originale) ? `<div class="serie-badges">
                     ${serie.plateforme ? `<div class="serie-platform-badge">${escapeHtml(serie.plateforme)}</div>` : ''}
                     ${serie.imdb_id ? `<a href="https://www.imdb.com/title/${encodeURIComponent(serie.imdb_id)}/" target="_blank" rel="noopener noreferrer" class="serie-imdb-link">IMDB ↗</a>` : ''}
+                    ${badgeLangue(serie)}
                 </div>` : ''}
                 <p class="serie-synopsis">${escapeHtml(serie.synopsis) || 'Aucun résumé disponible.'}</p>
                 <div class="serie-themes" data-serie-id="${serie.id}">

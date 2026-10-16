@@ -949,6 +949,17 @@ nav {
     margin-top: 0;
 }
 
+.serie-langue-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    padding: 3px 8px;
+    border-radius: 4px;
+    cursor: help;
+}
+
 /* ── Filtres de Plateforme ── */
 .platform-filters {
     display: flex;
@@ -968,6 +979,11 @@ nav {
     color: var(--text-muted);
     font-weight: 600;
     margin-left: auto;
+}
+
+/* Deux contrôles (Langue, Trier par) : seul le premier est poussé à droite */
+.sort-order-label + .sort-order-label {
+    margin-left: 0;
 }
 
 .sort-order-select {

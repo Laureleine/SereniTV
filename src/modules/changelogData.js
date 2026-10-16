@@ -14,6 +14,7 @@ export const CHANGELOG = [
             "Écran de connexion : un petit œil permet d'afficher le mot de passe en clair pendant la saisie, pour vérifier qu'il n'y a pas de faute de frappe.",
             "Nouveau bouton 👤 « Mon compte » : changer son mot de passe, s'abonner ou se désabonner des nouveautés de SéréniTV, et se déconnecter.",
             "Cartes des séries : le badge de la plateforme et le lien IMDB sont désormais côte à côte, ce qui laisse plus de place au résumé.",
+            "Langue originale des séries : affichée sur chaque carte (pays d'origine au survol), et nouveau filtre « Langue » à côté du tri.",
             "Les abonnés sont prévenus de chaque nouvelle version par email, et par une fenêtre « Quoi de neuf ? » à l'ouverture de l'appli.",
         ],
     },
