@@ -935,6 +935,20 @@ nav {
     background: rgba(245, 197, 24, 0.2);
 }
 
+/* Plateforme + IMDB sur une même ligne (gagne une ligne pour le reste de la carte) */
+.serie-badges {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: -4px;
+}
+
+.serie-badges .serie-platform-badge,
+.serie-badges .serie-imdb-link {
+    margin-top: 0;
+}
+
 /* ── Filtres de Plateforme ── */
 .platform-filters {
     display: flex;
