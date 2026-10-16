@@ -1382,6 +1382,26 @@ nav {
 }
 .remote-btn--yes:hover .remote-btn__label { color: var(--neon-blue); }
 
+.remote-btn--undo .remote-btn__icon {
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.remote-btn--undo:not(:disabled):hover,
+.remote-btn--undo:not(:disabled):active {
+    background: rgba(148, 163, 184, 0.15);
+    border-color: var(--text-muted);
+}
+
+.remote-btn--undo:disabled {
+    opacity: 0.35;
+    cursor: default;
+}
+
+.remote-btn--undo:disabled:hover {
+    transform: none;
+}
+
 /* ── Mode TV (10ft Interface) ── */
 .is-tv-mode {
     overflow: hidden;

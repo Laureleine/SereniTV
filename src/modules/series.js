@@ -307,6 +307,35 @@ export async function updateStatutGlobal(serieId, statutGlobal, userId = getCurr
     }
 }
 
+/**
+ * Annule un classement : remet la série dans son statut précédent (null =
+ * non classée → ligne utilisateur_series supprimée) et l'épingle en tête de
+ * liste pour qu'elle puisse être reclassée aussitôt.
+ * @param {number} serieId
+ * @param {string|null} statutPrecedent
+ */
+export async function annulerStatutGlobal(serieId, statutPrecedent, userId = getCurrentUserId()) {
+    const statutActuel = seriesData.find(s => s.id === serieId)?.statut_visionnage ?? null;
+
+    try {
+        updateLocalSeriesStatus(serieId, statutPrecedent);
+        marquerAjoutManuel(serieId);
+        applyFilters();
+
+        await callEdgeFunction('update-user-status', statutPrecedent
+            ? { action: 'update_statut_global', userId, serieId, statut: statutPrecedent }
+            : { action: 'reset_statut_global', userId, serieId });
+
+        console.log(`[STATUT] ↶ Classement annulé, série ${serieId} → ${statutPrecedent ?? 'non classée'}.`);
+        return { success: true };
+    } catch (error) {
+        console.error('[STATUT] Erreur annulerStatutGlobal:', error);
+        updateLocalSeriesStatus(serieId, statutActuel);
+        applyFilters();
+        return { success: false, error };
+    }
+}
+
 // ─────────────────────────────────────────────
 // RENOUVELLEMENT AUTOMATIQUE (nouvelle saison / fin de série confirmée)
 // ─────────────────────────────────────────────

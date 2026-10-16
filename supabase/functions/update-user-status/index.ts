@@ -90,6 +90,22 @@ Deno.serve(async (req: Request) => {
         return jsonResponse(corsHeaders, { success: true });
       }
 
+      // Annulation d'un classement (bouton ↶ de la télécommande) : la série
+      // redevient « non classée » pour cet utilisateur.
+      case 'reset_statut_global': {
+        const serieId = parseInt(body.serieId);
+        if (!serieId) {
+          return jsonResponse(corsHeaders, { error: 'paramètres invalides' }, 400);
+        }
+        const { error } = await supabase
+          .from('utilisateur_series')
+          .delete()
+          .eq('user_id', userId)
+          .eq('serie_id', serieId);
+        if (error) throw error;
+        return jsonResponse(corsHeaders, { success: true });
+      }
+
       case 'apply_saisons_statuts': {
         const serieId = parseInt(body.serieId);
         const numeroSaison = parseInt(body.numeroSaison);

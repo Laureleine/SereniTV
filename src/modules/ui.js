@@ -9,6 +9,7 @@ import {
     diffuserSignalLancement,
     diffuserSignalPreview,
     getCurrentUserId,
+    annulerStatutGlobal,
     setLanguageFilter,
     setVersionFilter,
     getSeriesData,
@@ -222,10 +223,21 @@ export function initUI() {
     const btnMaybe = document.getElementById('remote-maybe');
     const btnYes = document.getElementById('remote-yes');
 
+    const btnUndo = document.getElementById('remote-undo');
+
     if (btnNo && btnMaybe && btnYes) {
+        // Pile d'annulation : un élément par clic NON / PEUT-ÊTRE / OUI, le plus
+        // récent à la fin. Chaque appui sur ↶ défait le dernier.
+        const pileAnnulation = [];
+        const MAX_ANNULATIONS = 30;
+        const majBoutonAnnuler = () => {
+            if (btnUndo) btnUndo.disabled = pileAnnulation.length === 0;
+        };
+
         const optimisteTriage = (id, statut, triggerPreview = false) => {
             // Retrouver la série active avant de la retirer
             const activeSerie = state.dernierRenduSeries.find(s => s.id === id);
+            const statutPrecedent = activeSerie?.statut_visionnage ?? null;
 
             // 1. Mise à jour visuelle instantanée
             const index = state.dernierRenduSeries.findIndex(s => s.id === id);
@@ -242,13 +254,40 @@ export function initUI() {
             }
 
             // 3. Enregistrement asynchrone en arrière-plan sans bloquer
-            updateStatutGlobal(id, statut, getCurrentUserId()).then((result) => {
+            const enregistrement = updateStatutGlobal(id, statut, getCurrentUserId()).then((result) => {
                 if (!result.success) {
                     console.error(`[OPTIMISTE] Échec de l'enregistrement de la série ${id} (${statut})`);
                     showToast("Échec de l'enregistrement, la série reste à classer.");
                 }
+                return result;
             });
+
+            pileAnnulation.push({ id, statutPrecedent, enregistrement });
+            if (pileAnnulation.length > MAX_ANNULATIONS) pileAnnulation.shift();
+            majBoutonAnnuler();
         };
+
+        // Les annulations s'exécutent l'une après l'autre, dans l'ordre des clics :
+        // après plusieurs ↶ rapides, la dernière série rendue est bien la plus
+        // ancienne, de nouveau en tête comme avant les clics.
+        let fileAnnulations = Promise.resolve();
+
+        btnUndo?.addEventListener('click', () => {
+            const dernier = pileAnnulation.pop();
+            majBoutonAnnuler();
+            if (!dernier) return;
+
+            fileAnnulations = fileAnnulations.then(async () => {
+                // Attendre la fin de l'enregistrement d'origine : sinon l'annulation
+                // pourrait arriver au serveur avant lui et être écrasée.
+                const resultat = await dernier.enregistrement;
+                if (!resultat.success) return; // déjà revenu en arrière tout seul
+
+                diffuserSignalPreview(null); // retire la prévisualisation d'un OUI sur la télé
+                const annulation = await annulerStatutGlobal(dernier.id, dernier.statutPrecedent);
+                if (!annulation.success) showToast("Impossible d'annuler ce choix, réessaie.");
+            });
+        });
 
         btnNo.addEventListener('click', () => {
             const firstCard = document.querySelector('.serie-card');

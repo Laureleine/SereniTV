@@ -11,6 +11,7 @@ export const CHANGELOG = [
         date: '2026-10-16',
         changes: [
             "Le nombre de séries s'affiche sous chaque onglet (Toutes, Nouveautés, En cours…). Il tient compte des autres filtres actifs : avec « Coréen », chaque onglet indique combien de séries coréennes il contient.",
+            "Nouveau bouton ↶ ANNULER à côté de NON / PEUT-ÊTRE / OUI : un clic trop rapide se rattrape. Chaque appui défait le choix précédent (jusqu'à 30 en arrière) et la série revient en tête de liste.",
         ],
     },
     {
