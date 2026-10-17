@@ -11,6 +11,8 @@ export const CHANGELOG = [
         date: '2026-10-17',
         changes: [
             "Catalogue enrichi : les 500 séries les plus populaires de Prime Video, Netflix et Disney+ en France sont désormais toutes dans SéréniTV (plus de 800 séries ajoutées, dont The Boys, Les Anneaux de pouvoir, Chicago Fire…).",
+            "Séries françaises : environ 600 fictions disponibles sur TF1+, M6+, Arte, Canal+, Molotov ou INA madelen rejoignent le catalogue (Demain nous appartient, HPI, Astrid et Raphaëlle, Le Bureau des légendes, Dix pour cent…).",
+            "TF1+, M6+, Arte et Canal+ sont maintenant reconnues comme plateformes : badge sur la carte, et le bouton « Lancer » ouvre directement leur site.",
             "Correction : l'import automatique du lundi pouvait laisser passer pour toujours des séries très populaires. Il repart maintenant chaque semaine du haut du classement.",
         ],
     },

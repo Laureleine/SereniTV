@@ -70,11 +70,18 @@ async function fetchTMDB(tmdbId: number) {
       { id: 8, name: 'Netflix', keywords: ['netflix'] },
       { id: 119, name: 'Prime Video', keywords: ['prime video', 'amazon prime'] },
       { id: 337, name: 'Disney+', keywords: ['disney'] },
+      { id: 1754, name: 'TF1+', keywords: [] },
+      { id: 147, name: 'M6+', keywords: [] },
+      { id: 381, name: 'Canal+', keywords: [] },
+      { id: 345, name: 'Canal+', keywords: [] },
+      { id: 234, name: 'Arte', keywords: [] },
     ];
+    // Abonnement, gratuit ou gratuit avec pub (le replay TF1+/M6+ est souvent « ads »).
+    const offres = [...(providers.flatrate || []), ...(providers.free || []), ...(providers.ads || [])];
 
-    if (providers.flatrate) {
+    if (offres.length > 0) {
       for (const target of targetProviders) {
-        const found = providers.flatrate.find((p: any) =>
+        const found = offres.find((p: any) =>
           p.provider_id === target.id ||
           (p.provider_name && target.keywords.some((k: string) => p.provider_name.toLowerCase().includes(k)))
         );

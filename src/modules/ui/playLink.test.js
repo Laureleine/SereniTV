@@ -60,6 +60,21 @@ describe('getPlayLink', () => {
         expect(getPlayLink(serie)).toEqual({ url: 'https://play.max.com/show/abc', name: 'HBO Max', class: 'autre' });
     });
 
+    it('ouvre la page TF1+ du programme à partir du titre', () => {
+        const serie = { plateforme: 'TF1+', titre: 'Ici tout commence !', watch_url: '' };
+        expect(getPlayLink(serie)).toEqual({ url: 'https://www.tf1.fr/recherche/ici-tout-commence', name: 'TF1+', class: 'tf1' });
+    });
+
+    it('ouvre la recherche M6+ et Arte', () => {
+        expect(getPlayLink({ plateforme: 'M6+', titre: 'Kaamelott' }).url).toBe('https://www.m6.fr/recherche?q=Kaamelott');
+        expect(getPlayLink({ plateforme: 'Arte', titre: 'Les Revenants' }).url).toBe(`https://www.arte.tv/fr/search/?q=${encodeURIComponent('Les Revenants')}`);
+    });
+
+    it('préfère le lien direct pour une plateforme française', () => {
+        const serie = { plateforme: 'Canal+', titre: 'Versailles', lien_plateforme: 'https://www.canalplus.com/series/versailles/h/123' };
+        expect(getPlayLink(serie)).toEqual({ url: 'https://www.canalplus.com/series/versailles/h/123', name: 'Canal+', class: 'canal' });
+    });
+
     it('replie sur une recherche Netflix pour une plateforme inconnue ou absente', () => {
         const serie = { plateforme: null, titre: 'Mystère', watch_url: '' };
         expect(getPlayLink(serie)).toEqual({

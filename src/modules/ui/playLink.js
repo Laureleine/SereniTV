@@ -58,6 +58,24 @@ export function getPlayLink(serie) {
         };
     }
 
+    // Plateformes françaises : lien direct s'il est connu, sinon leur recherche.
+    // TF1+ n'a pas de recherche par paramètre : /recherche/<titre-en-slug>
+    // redirige vers la page du programme quand le titre correspond.
+    const plateformesFr = {
+        'tf1+': { name: 'TF1+', class: 'tf1', recherche: t => `https://www.tf1.fr/recherche/${slugifier(t)}` },
+        'm6+': { name: 'M6+', class: 'm6', recherche: t => `https://www.m6.fr/recherche?q=${encodeURIComponent(t)}` },
+        'arte': { name: 'Arte', class: 'arte', recherche: t => `https://www.arte.tv/fr/search/?q=${encodeURIComponent(t)}` },
+        'canal+': { name: 'Canal+', class: 'canal', recherche: () => 'https://www.canalplus.com/' },
+    };
+    const fr = plateformesFr[platform];
+    if (fr) {
+        return {
+            url: serie.lien_plateforme || fr.recherche(titre),
+            name: fr.name,
+            class: fr.class
+        };
+    }
+
     // Autre plateforme (HBO Max, Apple TV, Paramount+…) : lien direct tel quel
     if (serie.lien_plateforme) {
         return {
@@ -73,4 +91,13 @@ export function getPlayLink(serie) {
         name: 'Netflix',
         class: 'netflix'
     };
+}
+
+/** « Ici tout commence ! » → « ici-tout-commence » (format des adresses tf1.fr). */
+function slugifier(texte) {
+    return texte
+        .normalize('NFD').replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
 }

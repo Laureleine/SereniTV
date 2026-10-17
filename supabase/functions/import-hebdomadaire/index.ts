@@ -42,14 +42,21 @@ async function fetchDetailsTMDB(tmdbId: number) {
   let detectedPlatform = d.networks?.[0]?.name || null;
   let watchUrl = null;
 
-  if (providers?.flatrate) {
+  // Abonnement, gratuit ou gratuit avec pub (le replay TF1+/M6+ est souvent « ads »).
+  const offres = [...(providers?.flatrate || []), ...(providers?.free || []), ...(providers?.ads || [])];
+  if (offres.length > 0) {
     const targetProviders = [
       { id: 8, name: 'Netflix', keywords: ['netflix'] },
       { id: 119, name: 'Prime Video', keywords: ['prime video', 'amazon prime'] },
       { id: 337, name: 'Disney+', keywords: ['disney'] },
+      { id: 1754, name: 'TF1+', keywords: [] },
+      { id: 147, name: 'M6+', keywords: [] },
+      { id: 381, name: 'Canal+', keywords: [] },
+      { id: 345, name: 'Canal+', keywords: [] },
+      { id: 234, name: 'Arte', keywords: [] },
     ];
     for (const target of targetProviders) {
-      const found = providers.flatrate.find((p: any) =>
+      const found = offres.find((p: any) =>
         p.provider_id === target.id ||
         (p.provider_name && target.keywords.some((k: string) => p.provider_name.toLowerCase().includes(k)))
       );
@@ -237,19 +244,26 @@ async function importerAnciennes(dejaConnus: Set<number>, pageDepart: number) {
 }
 
 /**
- * Rattrapage ponctuel d'une plateforme (8 Netflix, 119 Prime Video, 337 Disney+) :
- * importe au plus `lot` séries manquantes parmi ses `rangMax` plus populaires en
- * France. À rappeler jusqu'à ce qu'il renvoie importees = 0.
+ * Rattrapage ponctuel d'une ou plusieurs plateformes (8 Netflix, 119 Prime Video,
+ * 337 Disney+, « 1754|147 » pour TF1+ ou M6+…) : importe au plus `lot` séries
+ * manquantes parmi leurs `rangMax` plus populaires en France, éventuellement
+ * restreintes à un pays d'origine et sans certains genres TMDB.
+ * À rappeler jusqu'à ce qu'il renvoie importees = 0.
  */
-async function rattraperPlateforme(dejaConnus: Set<number>, fournisseur: number, rangMax: number, lot: number) {
+async function rattraperPlateforme(
+  dejaConnus: Set<number>, fournisseur: string, rangMax: number, lot: number,
+  options: { pays?: string; sansGenres?: string } = {}
+) {
   let importees = 0;
   let echecs = 0;
   let restantes = 0;
   const nbPages = Math.ceil(rangMax / 20);
+  const filtres = (options.pays ? `&with_origin_country=${encodeURIComponent(options.pays)}` : '')
+    + (options.sansGenres ? `&without_genres=${encodeURIComponent(options.sansGenres)}` : '');
 
   for (let page = 1; page <= nbPages; page++) {
     const data = await tmdbFetch(
-      `/discover/tv?sort_by=popularity.desc&page=${page}&watch_region=FR&with_watch_providers=${fournisseur}&with_watch_monetization_types=flatrate`
+      `/discover/tv?sort_by=popularity.desc&page=${page}&watch_region=FR&with_watch_providers=${encodeURIComponent(fournisseur)}${filtres}`
     );
     const resultats = data.results || [];
     if (resultats.length === 0) break;
@@ -281,8 +295,10 @@ Deno.serve(async (req: Request) => {
   try {
     const corps = await req.json().catch(() => ({}));
     if (corps?.rattrapage) {
-      const { fournisseur, rangMax = 500, lot = 40 } = corps.rattrapage;
-      const resultat = await rattraperPlateforme(await getTmdbIdsExistants(), Number(fournisseur), Number(rangMax), Number(lot));
+      const { fournisseur, rangMax = 500, lot = 40, pays, sansGenres } = corps.rattrapage;
+      const resultat = await rattraperPlateforme(
+        await getTmdbIdsExistants(), String(fournisseur), Number(rangMax), Number(lot), { pays, sansGenres }
+      );
       return new Response(JSON.stringify({ rattrapage: fournisseur, ...resultat }), { headers: { 'Content-Type': 'application/json' } });
     }
 
