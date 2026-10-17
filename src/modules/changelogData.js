@@ -7,6 +7,14 @@
  */
 export const CHANGELOG = [
     {
+        version: '1.7.8',
+        date: '2026-10-17',
+        changes: [
+            "Catalogue enrichi : les 500 séries les plus populaires de Prime Video, Netflix et Disney+ en France sont désormais toutes dans SéréniTV (plus de 800 séries ajoutées, dont The Boys, Les Anneaux de pouvoir, Chicago Fire…).",
+            "Correction : l'import automatique du lundi pouvait laisser passer pour toujours des séries très populaires. Il repart maintenant chaque semaine du haut du classement.",
+        ],
+    },
+    {
         version: '1.7.7',
         date: '2026-10-16',
         changes: [

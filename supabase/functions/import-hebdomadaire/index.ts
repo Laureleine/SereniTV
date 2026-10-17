@@ -236,6 +236,42 @@ async function importerAnciennes(dejaConnus: Set<number>, pageDepart: number) {
   return { importees, echecs, pageSuivante: page };
 }
 
+/**
+ * Rattrapage ponctuel d'une plateforme (8 Netflix, 119 Prime Video, 337 Disney+) :
+ * importe au plus `lot` séries manquantes parmi ses `rangMax` plus populaires en
+ * France. À rappeler jusqu'à ce qu'il renvoie importees = 0.
+ */
+async function rattraperPlateforme(dejaConnus: Set<number>, fournisseur: number, rangMax: number, lot: number) {
+  let importees = 0;
+  let echecs = 0;
+  let restantes = 0;
+  const nbPages = Math.ceil(rangMax / 20);
+
+  for (let page = 1; page <= nbPages; page++) {
+    const data = await tmdbFetch(
+      `/discover/tv?sort_by=popularity.desc&page=${page}&watch_region=FR&with_watch_providers=${fournisseur}&with_watch_monetization_types=flatrate`
+    );
+    const resultats = data.results || [];
+    if (resultats.length === 0) break;
+
+    for (const r of resultats) {
+      if (dejaConnus.has(r.id)) continue;
+      if (importees + echecs >= lot) { restantes++; continue; }
+      try {
+        await importerSerie(r.id, false);
+        dejaConnus.add(r.id);
+        importees++;
+      } catch (err) {
+        console.error(`[RATTRAPAGE ${fournisseur}] Échec tmdb_id=${r.id}:`, (err as Error).message);
+        echecs++;
+      }
+      await attendre(250);
+    }
+  }
+
+  return { importees, echecs, restantes };
+}
+
 Deno.serve(async (req: Request) => {
   const secretRecu = req.headers.get('x-internal-secret');
   if (!INTERNAL_IMPORT_SECRET || secretRecu !== INTERNAL_IMPORT_SECRET) {
@@ -243,17 +279,21 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const { data: etat, error: etatError } = await supabase
-      .from('import_auto_etat')
-      .select('discover_tv_last_page')
-      .eq('id', 1)
-      .single();
-    if (etatError) throw etatError;
+    const corps = await req.json().catch(() => ({}));
+    if (corps?.rattrapage) {
+      const { fournisseur, rangMax = 500, lot = 40 } = corps.rattrapage;
+      const resultat = await rattraperPlateforme(await getTmdbIdsExistants(), Number(fournisseur), Number(rangMax), Number(lot));
+      return new Response(JSON.stringify({ rattrapage: fournisseur, ...resultat }), { headers: { 'Content-Type': 'application/json' } });
+    }
 
     const dejaConnus = await getTmdbIdsExistants();
 
     const resultatNouveautes = await importerNouveautes(dejaConnus);
-    const resultatAnciennes = await importerAnciennes(dejaConnus, etat.discover_tv_last_page);
+    // Toujours depuis la page 1 : le classement de popularité bouge d'une semaine
+    // à l'autre, et un curseur qui ne revient jamais en arrière laissait passer
+    // pour toujours des séries très populaires (The Boys…). Les séries déjà au
+    // catalogue sont simplement sautées.
+    const resultatAnciennes = await importerAnciennes(dejaConnus, 1);
 
     await supabase
       .from('import_auto_etat')
